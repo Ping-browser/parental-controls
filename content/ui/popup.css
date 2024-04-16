@@ -1,0 +1,55 @@
+body{
+  width: 260px;
+  height: 200px;
+  padding-bottom: 10%;
+}
+
+#container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* #kidsContent{
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+} */
+
+form{
+  display: flex;
+    flex-direction: column;
+}
+
+input{
+  padding: 8px;
+  border-radius: 5px;
+  border: 2px solid #ece2d4;
+  margin-top: 10px;
+}
+
+input:focus{
+  outline: none;
+  border-color: rgb(255, 190, 51);
+  box-shadow: 0 0 3px rgb(255, 190, 51);
+  -moz-box-shadow: 0 0 3px rgb(255, 190, 51);
+  -webkit-box-shadow: 0 0 3px rgb(255, 190, 51);
+}
+
+button{
+  margin-top: 25px;
+  margin-bottom: 20px;
+  padding: 0.6rem;
+  padding-left: .8rem;
+  padding-right: .8rem;
+  background-color: rgb(252, 181, 88);
+  border-radius: 10px;
+  cursor: pointer;
+  border-style: none;
+  width: 100%;
+}
+
+.btn{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
