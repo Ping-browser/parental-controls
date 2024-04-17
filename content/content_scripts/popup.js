@@ -4,10 +4,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cpasswordInput = document.getElementById('cpassword');
     const passwordInput = document.getElementById('password');
     const password1 = document.getElementById('password1');
-    const statusDiv = document.getElementById('status');
+    const statusDiv = document.getElementsByClassName('status');
     const signUpContainer = document.getElementById('signUpContainer');
     const kidsContent = document.getElementById('kidsContent');
-    const logoutButton = document.getElementById('logoutBtn');
+    const logoutForm = document.getElementById('logoutForm');
     const password2 = document.getElementById('password2');
     const signInContainer = document.getElementById('signInContainer');
 
@@ -54,10 +54,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pass1 = cpasswordInput.value;
         const pass2 = passwordInput.value;
 
-        statusDiv.textContent = '';
+        statusDiv[0].textContent = '';
 
         try {
-            // Send login request to background script
+            // Send set password request to background script
             const response = await new Promise((resolve, reject) => {
                 chrome.runtime.sendMessage({ action: 'register', cpassword: pass1, password: pass2 }, (response) => {
                     if (chrome.runtime.lastError) {
@@ -69,25 +69,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (response && response.success === true) {
-                statusDiv.textContent = 'Password set successfully!';
+                statusDiv[0].textContent = 'Password set successfully!';
                 await updatePopupContent();
             } else {
-                statusDiv.textContent = 'Kids mode failed. Please try again.';
+                statusDiv[0].textContent = response.error;
                 cpasswordInput.value = '';
                 passwordInput.value = '';
             }
         } catch (error) {
             console.error('Error registering:', error);
-            statusDiv.textContent = 'An error occurred while registering';
+            statusDiv[0].textContent = 'An error occurred while registering';
         }
     });
 
-    // Event listener for logout button
-    loginForm.addEventListener('click', async (event) => {
+    // Event listener for login button
+    loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const pass1 = password1.value;
 
-        statusDiv.textContent = '';
+        statusDiv[1].textContent = '';
 
         try {
             // Send logout request to background script
@@ -100,26 +100,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
             });
-            console.log(response)
             if (response && response.success === true) {
-                statusDiv.textContent = 'Logged in successfully!';
+                statusDiv[1].textContent = 'Logged in successfully!';
                 await updatePopupContent();
             } else {
-                statusDiv.textContent = 'Failed to login.';
+                statusDiv[1].textContent = response.error;
                 passwordInput.value = '';
             }
         } catch (error) {
-            console.error('Error logging in:', error);
-            statusDiv.textContent = 'An error occurred while logging in.';
+            // console.error('Error logging in:', error);
+            statusDiv[1].textContent = 'An error occurred while logging in.';
         }
     });
 
     // Event listener for logout button
-    logoutButton.addEventListener('click', async (event) => {
+    logoutForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const pass2 = password2.value;
 
-        statusDiv.textContent = '';
+        statusDiv[2].textContent = '';
 
         try {
             // Send logout request to background script
@@ -134,17 +133,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (response && response.success === true) {
-                statusDiv.textContent = 'Logged out successfully!';
-                console.log(response)
-                
+                statusDiv[2].textContent = 'Logged out successfully!';
                 await updatePopupContent();
             } else {
-                statusDiv.textContent = 'Failed to logout.';
+                statusDiv[2].textContent = response.error;
                 passwordInput.value = '';
             }
         } catch (error) {
             console.error('Error logging out:', error);
-            statusDiv.textContent = 'An error occurred while logging out.';
+            statusDiv[2].textContent = 'An error occurred while logging out.';
         }
     });
 });

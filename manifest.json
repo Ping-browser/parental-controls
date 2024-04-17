@@ -8,8 +8,7 @@
     "tabs",
     "activeTab",
     "windows",
-    "declarativeNetRequest",
-    "action"
+    "declarativeNetRequest"
   ],
   "background": {
     "service_worker": "./service_worker/background.js"

@@ -9,11 +9,10 @@ body{
   align-items: center;
   justify-content: center;
 }
-/* #kidsContent{
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-} */
+
+.status{
+  margin-bottom: 10px;
+}
 
 form{
   display: flex;
@@ -46,10 +45,4 @@ button{
   cursor: pointer;
   border-style: none;
   width: 100%;
-}
-
-.btn{
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }

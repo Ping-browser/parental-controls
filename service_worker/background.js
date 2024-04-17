@@ -29,6 +29,10 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
             console.error('Error hashing password:', error);
         }
     }
+    else {
+        // Confirm Password mismatch, send error response
+        sendResponse({ success: false, error: '*Passwords do not match' });
+    }
 }
 
 const kidsModeSignIn = async (password, sendResponse) => {
@@ -79,6 +83,10 @@ const kidsModeSignIn = async (password, sendResponse) => {
             catch (error) {
                 console.error('Error logging in:', error);
             }}
+            else {
+                // Password mismatch, send error response
+                sendResponse({ success: false, error: '*Invalid credentials' });
+            }
         }catch(error){
             console.error('Error logging in:', error);
         }
@@ -133,7 +141,7 @@ const logoutUser = async (password, sendResponse) => {
                 type: 'normal'
             });
         } else {
-            sendResponse({ success: false, error: 'Incorrect password' });
+            sendResponse({ success: false, error: '*Invalid Credentials' });
         }
     } catch (error) {
         console.error('Error logging out:', error);
