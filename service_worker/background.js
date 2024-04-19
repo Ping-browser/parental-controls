@@ -112,16 +112,7 @@ const logoutUser = async (password, sendResponse) => {
 
         // Check if the provided password matches the stored password
         if (storedPassword === hash) {
-            // Remove user data from storage
-            await new Promise((resolve, reject) => {
-                chrome.storage.local.set({loggedIn : false}, () => {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    } else {
-                        resolve();
-                    }
-                });
-            });
+            chrome.storage.local.set({loggedIn : false},)
 
             console.log('User logged out successfully');
             sendResponse({ success: true });
