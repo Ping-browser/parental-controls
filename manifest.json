@@ -8,10 +8,12 @@
     "tabs",
     "activeTab",
     "windows",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback"
   ],
   "background": {
-    "service_worker": "./service_worker/background.js"
+    "service_worker": "./service_worker/background.js",
+    "type": "module"
   },
   "action": {
     "default_popup": "/content/ui/popup.html",

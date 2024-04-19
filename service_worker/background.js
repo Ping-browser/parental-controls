@@ -1,3 +1,7 @@
+import {defaultBlockRules} from "../assets/rules/defaultBlockRules.js";
+import {socialMediaBlockRules} from "../assets/rules/socialMediaBlockRules.js";
+import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
+
 // Hash password function
 const hashPassword = async (password) => {
     const encoder = new TextEncoder();
@@ -112,6 +116,7 @@ const logoutUser = async (password, sendResponse) => {
 
         // Check if the provided password matches the stored password
         if (storedPassword === hash) {
+            removeServiceWorker();
             chrome.storage.local.set({loggedIn : false},)
 
             console.log('User logged out successfully');
@@ -139,6 +144,44 @@ const logoutUser = async (password, sendResponse) => {
         sendResponse({ success: false, error: 'An error occurred while logging out' });
     }
 }
+
+export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => {
+    const rulesToInject = [];
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRulesIds = oldRules.map(rule => rule.id);
+
+    // Pushing defaultBlockRules and additional rules based on conditions
+    if (socialMediaChecked && gamingChecked) {
+        rulesToInject.push(...socialMediaBlockRules);
+        rulesToInject.push(...gamingSiteRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else if (socialMediaChecked) {
+        rulesToInject.push(...socialMediaBlockRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else if (gamingChecked) {
+        rulesToInject.push(...gamingSiteRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else {
+        rulesToInject.push(...defaultBlockRules);
+    }
+    await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: oldRulesIds,
+        addRules: rulesToInject
+    });
+}
+
+//remove all the rules on the session end
+const removeServiceWorker = async () => {
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRulesIds = oldRules.map(rule => rule.id);
+    await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: oldRulesIds
+    });
+}
+
 
 
 // Listener for messages from content scripts or UI components
