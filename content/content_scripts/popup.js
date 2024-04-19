@@ -1,3 +1,5 @@
+import { injectServiceWorker, deinjectServiceWorker } from "../../service_worker/background.js";
+
 document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -10,6 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutForm = document.getElementById('logoutForm');
     const password2 = document.getElementById('password2');
     const signInContainer = document.getElementById('signInContainer');
+    const socialToggle = document.getElementById('blockSocialMediaCheckbox');
+    const gamingToggle = document.getElementById('blockGamesCheckbox');
 
     // Function to update popup content based on login status
     const updatePopupContent = async () => {
@@ -142,6 +146,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Error logging out:', error);
             statusDiv[2].textContent = 'An error occurred while logging out.';
+        }
+    });
+
+    //function for adding eventlistener to toggle if they exist
+    function addEventListenerIfExist(element, event, handler) {
+        if (element) {
+          element.addEventListener(event, handler);
+        } else {
+          console.error(`Element does not exist: ${element}`);
+        }
+    }
+      
+    addEventListenerIfExist(socialToggle, 'change', function () {
+        if (this.checked) {
+            console.log('Social toggle checked');
+          injectServiceWorker(true, false); // Injecting the service worker with social media rules
+        } else {
+            console.log('Social toggle unchecked');
+          deinjectServiceWorker(false,true);
+          // window.location.reload();
+        }
+    });
+      
+    addEventListenerIfExist(gamingToggle, 'change', function () {
+        if (this.checked) {
+            console.log('Gaming toggle checked');
+          injectServiceWorker(false,true); // Injecting the service worker with gaming sites rules
+        } else {
+          console.log('gaming toggle unchecked');
+          deinjectServiceWorker(true,false);
+          // window.location.reload();
         }
     });
 });

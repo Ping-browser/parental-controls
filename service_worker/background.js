@@ -1,3 +1,7 @@
+import {defaultBlockRules} from "../assets/rules/defaultBlockRules.js";
+import {socialMediaBlockRules} from "../assets/rules/socialMediaBlockRules.js";
+import {gamingSiteRules} from "../assets/rules/newsBlockRules.js";
+
 // Hash password function
 const hashPassword = async (password) => {
     const encoder = new TextEncoder();
@@ -138,6 +142,45 @@ const logoutUser = async (password, sendResponse) => {
         console.error('Error logging out:', error);
         sendResponse({ success: false, error: 'An error occurred while logging out' });
     }
+}
+
+export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => {
+    const rulesToInject = [];
+
+    // Pushing defaultBlockRules and additional rules based on conditions
+    rulesToInject.push(...defaultBlockRules);
+    if (socialMediaChecked) {
+        rulesToInject.push(...socialMediaBlockRules);
+    }
+    if (gamingChecked) {
+        rulesToInject.push(...gamingSiteRules);
+    }
+
+    await chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: rulesToInject
+    });
+}
+
+
+
+export const deinjectServiceWorker = async (socialMediaChecked, gamingChecked) => {
+    const oldRules = await chrome.declarativeNetRequest.getRules();
+    const oldRulesIds =  oldRules.map(rule => rule.id);
+    const newRules = [];
+
+    // Pushing defaultBlockRules and additional rules based on conditions
+    newRules.push(...defaultBlockRules);
+    if (socialMediaChecked) {
+        newRules.push(...socialMediaBlockRules);
+    }
+    if (gamingChecked) {
+        newRules.push(...gamingSiteRules);
+    }
+
+    await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: oldRulesIds,
+        addRules: newRules
+    });
 }
 
 
