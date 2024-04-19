@@ -151,12 +151,21 @@ export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => 
     const oldRulesIds = oldRules.map(rule => rule.id);
 
     // Pushing defaultBlockRules and additional rules based on conditions
-    rulesToInject.push(...defaultBlockRules);
-    if (socialMediaChecked) {
+    if (socialMediaChecked && gamingChecked) {
         rulesToInject.push(...socialMediaBlockRules);
-    }
-    if (gamingChecked) {
         rulesToInject.push(...gamingSiteRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else if (socialMediaChecked) {
+        rulesToInject.push(...socialMediaBlockRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else if (gamingChecked) {
+        rulesToInject.push(...gamingSiteRules);
+        rulesToInject.push(...defaultBlockRules);
+    }
+    else {
+        rulesToInject.push(...defaultBlockRules);
     }
     await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: oldRulesIds,

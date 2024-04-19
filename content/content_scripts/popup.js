@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const signInContainer = document.getElementById("signInContainer");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
-    const loginButton = document.getElementById("loginBtn");
-    const logoutButton = document.getElementById("logoutBtn");
+  const loginButton = document.getElementById("loginBtn");
+  const logoutButton = document.getElementById("logoutBtn");
 
   // Function to update popup content based on login status
   const updatePopupContent = async () => {
@@ -113,6 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       if (response && response.success === true) {
         statusDiv[1].textContent = "Logged in successfully!";
+        handleServiceWorkerInjection();
         await updatePopupContent();
       } else {
         statusDiv[1].textContent = response.error;
@@ -190,8 +191,4 @@ document.addEventListener("DOMContentLoaded", async () => {
       await injectServiceWorker(false, true);
     }
   };
-
-  loginButton.addEventListener("click", function () {
-    handleServiceWorkerInjection();
-  });
 });
