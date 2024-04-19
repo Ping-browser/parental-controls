@@ -1,6 +1,6 @@
 import {defaultBlockRules} from "../assets/rules/defaultBlockRules.js";
 import {socialMediaBlockRules} from "../assets/rules/socialMediaBlockRules.js";
-import {gamingSiteRules} from "../assets/rules/newsBlockRules.js";
+import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
 
 // Hash password function
 const hashPassword = async (password) => {
@@ -116,6 +116,7 @@ const logoutUser = async (password, sendResponse) => {
 
         // Check if the provided password matches the stored password
         if (storedPassword === hash) {
+            removeServiceWorker();
             chrome.storage.local.set({loggedIn : false},)
 
             console.log('User logged out successfully');
@@ -146,6 +147,8 @@ const logoutUser = async (password, sendResponse) => {
 
 export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => {
     const rulesToInject = [];
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRulesIds = oldRules.map(rule => rule.id);
 
     // Pushing defaultBlockRules and additional rules based on conditions
     rulesToInject.push(...defaultBlockRules);
@@ -155,33 +158,21 @@ export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => 
     if (gamingChecked) {
         rulesToInject.push(...gamingSiteRules);
     }
-
     await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: oldRulesIds,
         addRules: rulesToInject
     });
 }
 
-
-
-export const deinjectServiceWorker = async (socialMediaChecked, gamingChecked) => {
-    const oldRules = await chrome.declarativeNetRequest.getRules();
-    const oldRulesIds =  oldRules.map(rule => rule.id);
-    const newRules = [];
-
-    // Pushing defaultBlockRules and additional rules based on conditions
-    newRules.push(...defaultBlockRules);
-    if (socialMediaChecked) {
-        newRules.push(...socialMediaBlockRules);
-    }
-    if (gamingChecked) {
-        newRules.push(...gamingSiteRules);
-    }
-
+//remove all the rules on the session end
+const removeServiceWorker = async () => {
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRulesIds = oldRules.map(rule => rule.id);
     await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: oldRulesIds,
-        addRules: newRules
+        removeRuleIds: oldRulesIds
     });
 }
+
 
 
 // Listener for messages from content scripts or UI components
