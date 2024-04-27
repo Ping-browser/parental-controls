@@ -1,4 +1,4 @@
-import {injectServiceWorker} from "../../service_worker/background.js";
+import { injectServiceWorker } from "../../service_worker/background.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
