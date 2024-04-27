@@ -278,23 +278,23 @@ export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => 
     const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
     const oldRulesIds = oldRules.map(rule => rule.id);
 
-    // Pushing defaultBlockRules and additional rules based on conditions
-    if (socialMediaChecked && gamingChecked) {
-        rulesToInject.push(...socialMediaBlockRules);
-        rulesToInject.push(...gamingSiteRules);
-        rulesToInject.push(...defaultBlockRules);
-    }
-    else if (socialMediaChecked) {
-        rulesToInject.push(...socialMediaBlockRules);
-        rulesToInject.push(...defaultBlockRules);
-    }
-    else if (gamingChecked) {
-        rulesToInject.push(...gamingSiteRules);
-        rulesToInject.push(...defaultBlockRules);
-    }
-    else {
-        rulesToInject.push(...defaultBlockRules);
-    }
+    const toggle = [socialMediaChecked, gamingChecked];
+    rulesToInject.push(...defaultBlockRules);
+    toggle.forEach((element, index) => {
+        if (element){
+            switch (index){
+                case 0:
+                    rulesToInject.push(...socialMediaBlockRules);
+                    break;
+                case 1:
+                    rulesToInject.push(...gamingSiteRules);
+                    break;
+                default:
+                    console.log('Unknown toggle status');
+            }
+        }
+    });
+
     await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: oldRulesIds,
         addRules: rulesToInject
@@ -309,7 +309,6 @@ const removeServiceWorker = async () => {
         removeRuleIds: oldRulesIds
     });
 }
-
 
 
 // Listener for messages from content scripts or UI components

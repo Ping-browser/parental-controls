@@ -158,35 +158,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  //function for adding eventlistener to toggle if they exist
-  let socialChecked = false;
-  let gamingChecked = false;
+  //an array to store toggle elements and their checked status for service worker injection
+  const toggles = [
+    { element: socialToggle, checked: false },
+    { element: gamingToggle, checked: false },
+  ];
 
-  socialToggle.addEventListener("change", function () {
-    socialChecked = this.checked;
-  });
-
-  gamingToggle.addEventListener("change", function () {
-    gamingChecked = this.checked;
-  });
-
+  // Function to handle service worker injection based on toggle status and update the toggles array
   const handleServiceWorkerInjection = async () => {
-    if (socialChecked && gamingChecked) {
-      console.log("Both toggles checked, injecting service worker");
-      await injectServiceWorker(true, true);
-    } else if (!socialChecked && !gamingChecked) {
-      console.log("Both toggles unchecked, deinjecting service worker");
-      await injectServiceWorker(false, false);
-    } else if (socialChecked && !gamingChecked) {
-      console.log(
-        "Social toggle checked, gaming toggle unchecked, injecting service worker for social media"
-      );
-      await injectServiceWorker(true, false);
-    } else if (!socialChecked && gamingChecked) {
-      console.log(
-        "Social toggle unchecked, gaming toggle checked, injecting service worker for gaming"
-      );
-      await injectServiceWorker(false, true);
+    const checkedToggles = toggles.filter((toggle) => toggle.checked);
+
+    switch (checkedToggles.length) {
+      case 0:
+        await injectServiceWorker(false, false);
+        break;
+      case 1:
+        const [toggle] = checkedToggles;
+        const type =
+          toggle.element === socialToggle ? "social media" : "gaming";
+        await injectServiceWorker(
+          toggle.element === socialToggle,
+          toggle.element === gamingToggle
+        );
+        break;
+      case 2:
+        await injectServiceWorker(true, true);
+        break;
+      default:
+        console.log("Unknown toggle status");
     }
   };
+
+  // Add event listeners to toggle elements
+  toggles.forEach((toggle) => {
+    toggle.element.addEventListener("change", function () {
+      toggle.checked = this.checked;
+      handleServiceWorkerInjection();
+    });
+  });
 });

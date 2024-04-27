@@ -148,7 +148,7 @@ export const socialMediaBlockRules = [
       "priority": 1,
       "action": { "type": "block" },
       "condition": {
-        "urlFilter": "/*youtube*/",
+        "urlFilter": "/*vimeo*/",
         "resourceTypes": ["main_frame"]
       }
     },
@@ -157,7 +157,7 @@ export const socialMediaBlockRules = [
       "priority": 1,
       "action": { "type": "block" },
       "condition": {
-        "urlFilter": "/*vimeo*/",
+        "urlFilter": "/*twitch*/",
         "resourceTypes": ["main_frame"]
       }
     },
@@ -166,21 +166,12 @@ export const socialMediaBlockRules = [
       "priority": 1,
       "action": { "type": "block" },
       "condition": {
-        "urlFilter": "/*twitch*/",
-        "resourceTypes": ["main_frame"]
-      }
-    },
-    {
-      "id": 599,
-      "priority": 1,
-      "action": { "type": "block" },
-      "condition": {
         "urlFilter": "/*flickr*/",
         "resourceTypes": ["main_frame"]
       }
     },
     {
-      "id": 600,
+      "id": 599,
       "priority": 1,
       "action": { "type": "block" },
       "condition": {
