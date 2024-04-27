@@ -5,15 +5,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const registerForm = document.getElementById("registerForm");
   const cpasswordInput = document.getElementById("cpassword");
   const passwordInput = document.getElementById("password");
-  const loginPassword = document.getElementById("loginPassword");
+  const password1 = document.getElementById("password1");
   const statusDiv = document.getElementsByClassName("status");
   const signUpContainer = document.getElementById("signUpContainer");
   const kidsContent = document.getElementById("kidsContent");
   const logoutForm = document.getElementById("logoutForm");
-  const logoutPassword = document.getElementById("logoutPassword");
+  const password2 = document.getElementById("password2");
   const signInContainer = document.getElementById("signInContainer");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
+  const loginButton = document.getElementById("loginBtn");
+  const logoutButton = document.getElementById("logoutBtn");
 
   // Function to update popup content based on login status
   const updatePopupContent = async () => {
@@ -91,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Event listener for login button
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const pass = loginPassword.value;
+    const pass1 = password1.value;
 
     statusDiv[1].textContent = "";
 
@@ -99,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Send logout request to background script
       const response = await new Promise((resolve, reject) => {
         chrome.runtime.sendMessage(
-          { action: "login", password: pass },
+          { action: "login", password: pass1 },
           (response) => {
             if (chrome.runtime.lastError) {
               reject(chrome.runtime.lastError);
@@ -126,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Event listener for logout button
   logoutForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const pass2 = logoutPassword.value;
+    const pass2 = password2.value;
 
     statusDiv[2].textContent = "";
 
