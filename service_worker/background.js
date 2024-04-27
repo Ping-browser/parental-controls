@@ -2,6 +2,138 @@ import {defaultBlockRules} from "../assets/rules/defaultBlockRules.js";
 import {socialMediaBlockRules} from "../assets/rules/socialMediaBlockRules.js";
 import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
 
+let startTime;
+let timerId;
+let timeoutDuration;
+const startSessionTimeout = () => {
+    startTime = Date.now();
+    timerId = setTimeout(sessionTimeout, timeoutDuration);
+    console.log(timeoutDuration)
+}
+
+// Function to update time in local storage every minute
+const updateTimeInLocalStorage = () => {
+    setInterval(() => {
+        const currentTime = Date.now();
+        // console.log('Current time:', currentTime);
+        chrome.storage.local.set({ timeLeft: timeoutDuration -  (currentTime - startTime) })
+    }, 1000); // 60000 milliseconds = 1 minute
+}
+
+updateTimeInLocalStorage();
+
+// Function to restart the timer with the remaining time when the first window is opened again
+const restartTimer = async () => {
+    // clearTimeout(timerId);
+    console.log("restart timer")
+
+    await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['timeLeft'], (data) => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(data);
+            }
+
+            timeoutDuration = data.timeLeft;
+            console.log(timeoutDuration, " timeoutduration")
+        });
+    });
+    startSessionTimeout()
+}
+
+
+// Listener for when a window is created
+chrome.windows.onCreated.addListener(async () =>{
+    const data = await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['loggedIn', 'sessionTimeout','timeLeft'], (data) => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+    chrome.windows.getAll({ populate: false }, (windows) => {
+        if (windows.length === 1) {
+            if(data.loggedIn && data.sessionTimeout != true)
+            {restartTimer();}
+            // console.log(data.loggedIn, data.sessionTimeout, data.timeLeft)
+            console.log('First window opened!');
+        }
+    });
+});
+
+chrome.tabs.onCreated.addListener((tab) => {
+    chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
+        if (data.loggedIn && data.sessionTimeout) {
+            const tabUrl = tab.url;
+            if (tabUrl !== "chrome://extensions/") {
+
+                chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
+            }
+            blockHttpsSearch();
+        }
+    });
+});
+
+const sessionTimeout = () => {
+
+    // Perform necessary actions when the session times out
+    chrome.storage.local.set({ sessionTimeout: true }, () => {
+        if (chrome.runtime.lastError) {
+            console.error('Error setting sessionTimeout flag:', chrome.runtime.lastError);
+        }
+    });
+    console.log("sessionTimeout")
+    chrome.windows.create({
+        url: '../content/ui/sessionTimeout.html',
+        type: 'normal'
+    },
+        chrome.windows.getAll({ populate: true }, (windows) => {
+            windows.forEach((window) => {
+                chrome.windows.remove(window.id);
+            });
+        })
+    )
+}
+
+// Function to block Google search URLs
+const blockHttpsSearch = () => {
+    const blockRule = {
+        id: 1,
+        priority: 1,
+        action: {
+            type: 'block'
+        },
+        condition: {
+            urlFilter: 'https://*/*',
+            resourceTypes: ['main_frame']
+        }
+    };
+
+    chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: [],
+        addRules: [blockRule]
+    });
+}
+
+// Function to allow Google search URLs
+const allowHttpsSearchAsync = async () => {
+    return new Promise((resolve, reject) => {
+        chrome.declarativeNetRequest.updateDynamicRules({
+            removeRuleIds: [1],
+            addRules: []
+        }, () => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
 // Hash password function
 const hashPassword = async (password) => {
     const encoder = new TextEncoder();
@@ -41,7 +173,6 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
 
 const kidsModeSignIn = async (password, sendResponse) => {
     try {
-        // Retrieve stored data
         const data = await new Promise((resolve, reject) => {
             chrome.storage.local.get(['loggedIn', 'password'], (data) => {
                 if (chrome.runtime.lastError) {
@@ -54,13 +185,13 @@ const kidsModeSignIn = async (password, sendResponse) => {
 
         const storedPassword = data.password;
 
-        // Hash the provided password
         const hash = await hashPassword(password);
 
-        // Check if the provided password matches the stored password
         if (storedPassword === hash) {
-
+            
             try {
+                timeoutDuration = 1 * 60 * 1000
+                startSessionTimeout();
                 chrome.storage.local.set({ loggedIn: true }, () => {
                     if (chrome.runtime.lastError) {
                         console.error('Error storing data:', chrome.runtime.lastError);
@@ -98,7 +229,6 @@ const kidsModeSignIn = async (password, sendResponse) => {
 // Function to handle user logout
 const logoutUser = async (password, sendResponse) => {
     try {
-        // Retrieve stored data
         const data = await new Promise((resolve, reject) => {
             chrome.storage.local.get(['loggedIn', 'password'], (data) => {
                 if (chrome.runtime.lastError) {
@@ -111,27 +241,25 @@ const logoutUser = async (password, sendResponse) => {
 
         const storedPassword = data.password;
 
-        // Hash the provided password
         const hash = await hashPassword(password);
 
         // Check if the provided password matches the stored password
         if (storedPassword === hash) {
             removeServiceWorker();
-            chrome.storage.local.set({loggedIn : false},)
+            clearTimeout(timerId);
+            chrome.storage.local.set({loggedIn : false, sessionTimeout:false, timeLeft: 1 * 60 * 1000},)
 
             console.log('User logged out successfully');
             sendResponse({ success: true });
 
-            // await allowHttpsSearchAsync();
+            await allowHttpsSearchAsync();
 
-            // Close current windows
             chrome.windows.getAll({ populate: true }, (windows) => {
                 windows.forEach((window) => {
                     chrome.windows.remove(window.id);
                 });
             });
 
-            // Create a new window with Google
             chrome.windows.create({
                 url: 'https://google.com',
                 type: 'normal'
@@ -181,7 +309,6 @@ const removeServiceWorker = async () => {
         removeRuleIds: oldRulesIds
     });
 }
-
 
 
 // Listener for messages from content scripts or UI components
