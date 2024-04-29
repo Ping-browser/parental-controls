@@ -167,26 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Function to handle service worker injection based on toggle status and update the toggles array
   const handleServiceWorkerInjection = async () => {
     const checkedToggles = toggles.filter((toggle) => toggle.checked);
-
-    switch (checkedToggles.length) {
-      case 0:
-        await injectServiceWorker(false, false);
-        break;
-      case 1:
-        const [toggle] = checkedToggles;
-        const type =
-          toggle.element === socialToggle ? "social media" : "gaming";
-        await injectServiceWorker(
-          toggle.element === socialToggle,
-          toggle.element === gamingToggle
-        );
-        break;
-      case 2:
-        await injectServiceWorker(true, true);
-        break;
-      default:
-        console.log("Unknown toggle status");
-    }
+    await injectServiceWorker(toggles,checkedToggles);
   };
 
   // Add event listeners to toggle elements

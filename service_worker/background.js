@@ -273,25 +273,25 @@ const logoutUser = async (password, sendResponse) => {
     }
 }
 
-export const injectServiceWorker = async (socialMediaChecked, gamingChecked) => {
+export const injectServiceWorker = async (toggles,checkedToggles) => {
     const rulesToInject = [];
     const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
     const oldRulesIds = oldRules.map(rule => rule.id);
 
-    const toggle = [socialMediaChecked, gamingChecked];
     rulesToInject.push(...defaultBlockRules);
-    toggle.forEach((element, index) => {
-        if (element){
-            switch (index){
-                case 0:
-                    rulesToInject.push(...socialMediaBlockRules);
-                    break;
-                case 1:
-                    rulesToInject.push(...gamingSiteRules);
-                    break;
-                default:
-                    console.log('Unknown toggle status');
-            }
+
+    checkedToggles.forEach((toggle) => {
+        const {element}= toggle;
+        const index = toggles.findIndex((t) => t.element === element);
+        switch (index) {
+            case 0:
+              rulesToInject.push(...socialMediaBlockRules);
+              break;
+            case 1:
+              rulesToInject.push(...gamingSiteRules);
+              break;
+            default:
+              console.log("Unknown toggle status");
         }
     });
 
