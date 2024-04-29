@@ -111,6 +111,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       if (response && response.success === true) {
         statusDiv[1].textContent = "Logged in successfully!";
+        toggles.forEach((toggle) => {
+          toggle.checked=toggle.element.checked;
+        });
         handleServiceWorkerInjection();
         await updatePopupContent();
       } else {
@@ -158,10 +161,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  //an array to store toggle elements and their checked status for service worker injection
+  //array to store toggle elements and their checked status for service worker injection
   const toggles = [
-    { element: socialToggle, checked: false },
-    { element: gamingToggle, checked: false },
+    { id:"socialMediaToggle", element: socialToggle, checked: false },
+    { id:"gamingToggle", element: gamingToggle, checked: false },
   ];
 
   // Function to handle service worker injection based on toggle status and update the toggles array
@@ -169,12 +172,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     const checkedToggles = toggles.filter((toggle) => toggle.checked);
     await injectServiceWorker(toggles,checkedToggles);
   };
-
-  // Add event listeners to toggle elements
-  toggles.forEach((toggle) => {
-    toggle.element.addEventListener("change", function () {
-      toggle.checked = this.checked;
-      handleServiceWorkerInjection();
-    });
-  });
 });

@@ -281,13 +281,12 @@ export const injectServiceWorker = async (toggles,checkedToggles) => {
     rulesToInject.push(...defaultBlockRules);
 
     checkedToggles.forEach((toggle) => {
-        const {element}= toggle;
-        const index = toggles.findIndex((t) => t.element === element);
-        switch (index) {
-            case 0:
+        const {id}= toggle;
+        switch (id) {
+            case "socialMediaToggle":
               rulesToInject.push(...socialMediaBlockRules);
               break;
-            case 1:
+            case "gamingToggle":
               rulesToInject.push(...gamingSiteRules);
               break;
             default:
