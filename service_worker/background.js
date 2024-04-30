@@ -273,7 +273,7 @@ const logoutUser = async (password, sendResponse) => {
     }
 }
 
-export const injectServiceWorker = async (toggles,checkedToggles) => {
+export const injectServiceWorker = async (checkedToggles) => {
     const rulesToInject = [];
     const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
     const oldRulesIds = oldRules.map(rule => rule.id);
