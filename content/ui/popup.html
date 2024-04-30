@@ -1,49 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Extension Popup</title>
   <link rel="stylesheet" href="../ui/popup.css">
 </head>
+
 <body>
-  <div id = "container">
-    <div id="signUpContainer">
-      <h1>Ping Kids Mode</h1>
-      <form id="registerForm">
-        <input type="password" id="password" placeholder="Password">
-        <input type="password" id="cpassword" placeholder="Confirm Password">
-        <button type="submit" id="loginBtn">Set Password</button>
-      </form>
-      <div class="status"></div>
-    </div>
-    <div id="signInContainer">
-      <h1>Ping Kids Mode</h1>
-      <form id="loginForm">
-        <input type="password" id="loginPassword" placeholder="Password">
-        <button type="submit" id="loginBtn">Login</button>
-      </form>
-      <div class="status"></div>
-      <div style="display: flex; flex-direction: column; margin-bottom: 10px;">
-        <div class="checkbox-container">
-          <input type="checkbox" id="blockGamesCheckbox" style="margin: 5px;">
-          <label class="checkbox-label" for="blockGamesCheckbox">Block Games</label>
+  <div id="container" style="display: flex; flex-direction: column;">
+    <div id="popupContainers">
+      <div id="signUpContainer">
+        <h1>Ping Kids Mode</h1>
+        <form id="registerForm">
+          <input type="password" id="password" placeholder="Password">
+          <input type="password" id="cpassword" placeholder="Confirm Password">
+          <button type="submit" id="loginBtn">Set Password</button>
+        </form>
       </div>
-      <div class="checkbox-container">
-          <input type="checkbox" id="blockSocialMediaCheckbox" style="margin: 5px;">
-          <label class="checkbox-label" for="blockSocialMediaCheckbox" style="font-weight: bold; font-size: large;">Block Social Media</label>
+      <div id="signInContainer">
+        <h1>Ping Kids Mode</h1>
+        <form id="loginForm">
+          <input type="password" id="loginPassword" placeholder="Password">
+          <button type="submit" id="loginBtn">Login</button>
+        </form>
+        <div style="display: flex; flex-direction: column; margin-bottom: 10px;">
+          <div class="checkbox-container">
+            <input type="checkbox" id="blockGamesCheckbox" style="margin: 5px;">
+            <label class="checkbox-label" for="blockGamesCheckbox">Block Games</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="blockSocialMediaCheckbox" style="margin: 5px;">
+            <label class="checkbox-label" for="blockSocialMediaCheckbox"
+              style="font-weight: bold; font-size: large;">Block Social Media</label>
+          </div>
+        </div>
       </div>
+      <div id="kidsContent">
+        <h1>Logout of kids mode</h1>
+        <form id="logoutForm">
+          <input type="password" id="logoutPassword" placeholder="Password">
+          <button type="submit" style="padding: 10px;" id="logoutBtn">Logout</button>
+        </form>
       </div>
     </div>
-    <div id = "kidsContent">
-      <h1>Logout of kids mode</h1>
-      <form id = "logoutForm">
-        <input type="password" id="logoutPassword" placeholder="Password">
-        <button type="submit" style="padding: 10px;" id = "logoutBtn">Logout</button>
-      </form>
-      <div class="status"></div>
-    </div>
+    <div id="status"></div>
   </div>
-  <script src="../content_scripts/popup.js" type="module"></script>
+  <script src="./popup.js" type="module"></script>
 </body>
+
 </html>

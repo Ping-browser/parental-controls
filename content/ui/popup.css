@@ -4,13 +4,26 @@ body{
   padding-bottom: 10%;
 }
 
+#signUpContainer{
+  display: flex;
+  flex-direction: column;
+}
+#signInContainer{
+  display: flex;
+  flex-direction: column;
+}
+#kidsContent{
+  display: flex;
+  flex-direction: column;
+}
+
 #container{
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.status{
+#status{
   margin-bottom: 10px;
 }
 

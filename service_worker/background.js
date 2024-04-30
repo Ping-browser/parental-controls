@@ -209,7 +209,6 @@ const kidsModeSignIn = async (password, sendResponse) => {
     
                         // Create a new window with Google
                         chrome.windows.create({
-                            url: '../content/ui/home.html',
                             type: 'normal'
                         });
                     }
@@ -261,7 +260,6 @@ const logoutUser = async (password, sendResponse) => {
             });
 
             chrome.windows.create({
-                url: 'https://google.com',
                 type: 'normal'
             });
         } else {
