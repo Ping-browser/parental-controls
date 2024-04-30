@@ -103,7 +103,7 @@ const logout = () => {
 };
 
 // Function to update popup content based on login status
-const updatePopupContent = async () => {
+const updatePopupContent = () => {
 
     chrome.storage.local.get("loggedIn", (data) => {
       if (data.loggedIn) {
