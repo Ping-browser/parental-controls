@@ -170,6 +170,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Function to handle service worker injection based on toggle status and update the toggles array
   const handleServiceWorkerInjection = async () => {
     const checkedToggles = toggles.filter((toggle) => toggle.checked);
-    await injectServiceWorker(toggles,checkedToggles);
+    await injectServiceWorker(checkedToggles);
   };
 });
