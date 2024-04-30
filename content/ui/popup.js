@@ -20,17 +20,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await register();
+    register();
   });
 
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await login();
+    login();
   });
 
   logoutForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await logout();
+    logout();
   });
 });
 
