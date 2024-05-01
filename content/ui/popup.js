@@ -1,34 +1,35 @@
 import { injectServiceWorker } from "../../service_worker/background.js";
 
-const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
-const cpasswordInput = document.getElementById("cpassword");
-const passwordInput = document.getElementById("password");
-const loginPassword = document.getElementById("loginPassword");
-const statusDiv = document.getElementById("status");
-const signUpContainer = document.getElementById("signUpContainer");
-const kidsContent = document.getElementById("kidsContent");
-const logoutForm = document.getElementById("logoutForm");
-const logoutPassword = document.getElementById("logoutPassword");
-const signInContainer = document.getElementById("signInContainer");
-const socialToggle = document.getElementById("blockSocialMediaCheckbox");
-const gamingToggle = document.getElementById("blockGamesCheckbox");
+let loginForm, registerForm, cpasswordInput, passwordInput, loginPassword, statusDiv, signUpContainer, kidsContent, logoutForm, logoutPassword, signInContainer, socialToggle, gamingToggle;
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  loginForm = document.getElementById("loginForm");
+  registerForm = document.getElementById("registerForm");
+  cpasswordInput = document.getElementById("cpassword");
+  passwordInput = document.getElementById("password");
+  loginPassword = document.getElementById("loginPassword");
+  statusDiv = document.getElementById("status");
+  signUpContainer = document.getElementById("signUpContainer");
+  kidsContent = document.getElementById("kidsContent");
+  logoutForm = document.getElementById("logoutForm");
+  logoutPassword = document.getElementById("logoutPassword");
+  signInContainer = document.getElementById("signInContainer");
+  socialToggle = document.getElementById("blockSocialMediaCheckbox");
+  gamingToggle = document.getElementById("blockGamesCheckbox");
 
-  await updatePopupContent();
+  updatePopupContent();
 
-  registerForm.addEventListener("submit", async (event) => {
+  registerForm.addEventListener("submit", (event) => {
     event.preventDefault();
     register();
-  });
+  });                   
 
-  loginForm.addEventListener("submit", async (event) => {
+  loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
     login();
   });
 
-  logoutForm.addEventListener("submit", async (event) => {
+  logoutForm.addEventListener("submit", (event) => {
     event.preventDefault();
     logout();
   });

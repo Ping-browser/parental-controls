@@ -207,7 +207,7 @@ const kidsModeSignIn = async (password, sendResponse) => {
                             });
                         });
     
-                        // Create a new window with Google
+                        // Create a new window
                         chrome.windows.create({
                             type: 'normal'
                         });
