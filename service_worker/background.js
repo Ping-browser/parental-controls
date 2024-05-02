@@ -35,7 +35,7 @@ const restartTimer = async () => {
                 resolve(data);
             }
 
-            timeoutDuration = data.timeLeft;
+            if(data.timeLeft) timeoutDuration = data.timeLeft;
             console.log(timeoutDuration, " timeoutduration")
         });
     });
@@ -45,23 +45,17 @@ const restartTimer = async () => {
 
 // Listener for when a window is created
 chrome.windows.onCreated.addListener(async () =>{
-    const data = await new Promise((resolve, reject) => {
-        chrome.storage.local.get(['loggedIn', 'sessionTimeout','timeLeft'], (data) => {
-            if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-            } else {
-                resolve(data);
-            }
-        });
+        await chrome.storage.local.get(['loggedIn', 'sessionTimeout','timeLeft'], (data) => {
+            chrome.windows.getAll({ populate: false }, (windows) => {
+                if (windows.length === 1) {
+                    if(data.loggedIn && data.sessionTimeout != true)
+                    {restartTimer();}
+                    // console.log(data.loggedIn, data.sessionTimeout, data.timeLeft)
+                    console.log('First window opened!');
+                }
+            });
     });
-    chrome.windows.getAll({ populate: false }, (windows) => {
-        if (windows.length === 1) {
-            if(data.loggedIn && data.sessionTimeout != true)
-            {restartTimer();}
-            // console.log(data.loggedIn, data.sessionTimeout, data.timeLeft)
-            console.log('First window opened!');
-        }
-    });
+    
 });
 
 chrome.tabs.onCreated.addListener((tab) => {
@@ -120,19 +114,11 @@ const blockHttpsSearch = () => {
 
 // Function to allow Google search URLs
 const allowHttpsSearchAsync = async () => {
-    return new Promise((resolve, reject) => {
-        chrome.declarativeNetRequest.updateDynamicRules({
+        await chrome.declarativeNetRequest.updateDynamicRules({
             removeRuleIds: [1],
             addRules: []
-        }, () => {
-            if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
+        }
+        )}
 
 // Hash password function
 const hashPassword = async (password) => {
@@ -151,7 +137,7 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
     if (cpassword === password) {
         try {
             const hash = await hashPassword(password)
-            chrome.storage.local.set({ loggedIn: false, password: hash }, () => {
+            await chrome.storage.local.set({ loggedIn: false, password: hash }, () => {
                 if (chrome.runtime.lastError) {
                     console.error('Error storing data:', chrome.runtime.lastError);
                     sendResponse({ success: false });
@@ -173,17 +159,8 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
 
 const kidsModeSignIn = async (password, sendResponse) => {
     try {
-        const data = await new Promise((resolve, reject) => {
-            chrome.storage.local.get(['loggedIn', 'password'], (data) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                } else {
-                    resolve(data);
-                }
-            });
-        });
-
-        const storedPassword = data.password;
+        await chrome.storage.local.get(['loggedIn', 'password'], async (data) => {
+                const storedPassword = data.password;
 
         const hash = await hashPassword(password);
 
@@ -221,6 +198,9 @@ const kidsModeSignIn = async (password, sendResponse) => {
                 // Password mismatch, send error response
                 sendResponse({ success: false, error: '*Invalid credentials' });
             }
+            });
+
+        
         }catch(error){
             console.error('Error logging in:', error);
         }
@@ -228,17 +208,8 @@ const kidsModeSignIn = async (password, sendResponse) => {
 // Function to handle user logout
 const logoutUser = async (password, sendResponse) => {
     try {
-        const data = await new Promise((resolve, reject) => {
-            chrome.storage.local.get(['loggedIn', 'password'], (data) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                } else {
-                    resolve(data);
-                }
-            });
-        });
-
-        const storedPassword = data.password;
+        await chrome.storage.local.get(['loggedIn', 'password'], async (data) => {
+                const storedPassword = data.password;
 
         const hash = await hashPassword(password);
 
@@ -265,6 +236,9 @@ const logoutUser = async (password, sendResponse) => {
         } else {
             sendResponse({ success: false, error: '*Invalid Credentials' });
         }
+            });
+
+        
     } catch (error) {
         console.error('Error logging out:', error);
         sendResponse({ success: false, error: 'An error occurred while logging out' });
