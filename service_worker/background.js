@@ -9,6 +9,7 @@ const startSessionTimeout = () => {
     startTime = Date.now();
     chrome.storage.local.set({startTime: startTime})
     timerId = setTimeout(sessionTimeout, timeoutDuration);
+    // console.log("startSessionTimer", timeoutDuration,)
 }
 
 // Function to restart the timer with the remaining time when the first window is opened again
@@ -23,6 +24,7 @@ const restartTimer = async () => {
             }
 
             if(data.timeLeft) timeoutDuration = data.timeLeft;
+            // console.log(timeoutDuration, "timeoutduration")
         });
     });
     startSessionTimeout()
@@ -58,6 +60,7 @@ const updateTimeInLocalStorage = () => {
     setInterval(async () => {
         const currentTime = Date.now();
         await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+        // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime))
     }, 60000); // 60000 milliseconds = 1 minute
 }
 

@@ -52,6 +52,10 @@ body {
   display: flex;
   align-items: center;
 }
+#timerDisplay {
+  font-size: 18px;
+  font-weight: bold;
+}
 
 form {
   display: flex;

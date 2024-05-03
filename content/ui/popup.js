@@ -2,8 +2,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
+  const sessionTimeSelect = document.getElementById("sessionTime"); 
+  const timerDisplay = document.getElementById("timerDisplay")
 
   await updatePopupContent();
+  // displayTimer(sessionTimeSelect.value);
+
 
   setSessionTimer();
   resizeDropdown();
@@ -52,7 +56,7 @@ const register = () => {
 };
 
 //login
-const login = () => {
+const login = async () => {
   const sessionTimeSelect = document.getElementById("sessionTime"); 
   const loginPassword = document.getElementById("loginPassword");
   const statusDiv = document.getElementById("status");
@@ -73,16 +77,17 @@ const login = () => {
   const pass = loginPassword.value;
   statusDiv.textContent = "";
 
-  const sessionTime = sessionTimeSelect.value;
+  const sessionTime = {value : sessionTimeSelect.value};
   // Send login request to background script
-  chrome.runtime.sendMessage(
-    { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime},
-    async (response) => {
+  await chrome.runtime.sendMessage(
+    { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime.value},
+    async(response) => {
       if (response && response.success === true) {
         statusDiv.textContent = "Logged in successfully!";
-        await updatePopupContent();
+        await updatePopupContent({sessionTime: sessionTime.value});
+        
       } else {
-        statusDiv.textContent = response.error;
+        statusDiv.textContent = response.error + " login yyyy";
         passwordInput.value = "";
       }
     }
@@ -113,16 +118,20 @@ const logout = () => {
 };
 
 // Function to update popup content based on login status
-const updatePopupContent = async () => {
+const updatePopupContent = async (args) => {
   const signUpContainer = document.getElementById("signUpContainer");
   const kidsContent = document.getElementById("kidsContent");
   const signInContainer = document.getElementById("signInContainer");
-  chrome.storage.local.get("loggedIn", (data) => {
+  let isLoggedInLocal = false;
+  displayTimer(args)
+  await chrome.storage.local.get("loggedIn", (data) => {
     if (data.loggedIn) {
       // User is logged in
+      isLoggedInLocal = true;
       signUpContainer.style.display = "none";
       signInContainer.style.display = "none";
       kidsContent.style.display = "block";
+      
     } else if (data.loggedIn === false) {
       // User is not logged in
       signUpContainer.style.display = "none";
@@ -134,6 +143,8 @@ const updatePopupContent = async () => {
       kidsContent.style.display = "none";
     }
   });
+  // if(isLoggedInLocal) 
+  
 };
 
 const setSessionTimer = () => {
@@ -153,18 +164,54 @@ sessionTimeSelect.appendChild(option);
 }
 
 const resizeDropdown = () => {
-  const selectElement = document.querySelector('#sessionTime');
-  
-  selectElement.addEventListener('mousedown', function() {
-    if (this.options.length > 6) {
-      this.size = 6;
+  const selectElement = document.getElementById("sessionTime");
+
+  selectElement.addEventListener('mousedown', () => {
+    if (selectElement.options.length > 6) {
+      selectElement.size = 6;
     }
   });
-  selectElement.addEventListener('change', function() {
-    this.size = 0;
+
+  selectElement.addEventListener('change', () => {
+    selectElement.size = 0;
   });
 
-  selectElement.addEventListener('blur', function() {
-    this.size = 0;
+  selectElement.addEventListener('blur', () => {
+    selectElement.size = 0;
   });
+};
+
+const displayTimer = (args) => {
+  const text = document.getElementById("custom")
+  if(!args) text.textContent = "args not recieved";
+  text.innerHTML = args
+  // let sessionTime = args.sessionTime;
+// var countDownDate = new Date().getTime() + sessionTime * 60 * 60 * 1000;
+
+// text.textContent = "iiii" + sessionTime
+
+// // Update the count down every 1 second
+// var x = setInterval(() => {
+
+//   var now = new Date().getTime();
+//   var distance = countDownDate - now;
+
+//   // Time calculations for days, hours, minutes and seconds
+//   var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+//   var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+//   var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+//   var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+//   // Display the result in the element with id="demo"
+//   document.getElementById("timerDisplay").textContent = hours + "h "
+//   + minutes + "m " + seconds + "s ";
+
+//   // If the count down is finished, write some text
+//   if (distance < 0) {
+//     clearInterval(x);
+//     if(sessionTime) document.getElementById("timerDisplay").textContent = sessionTime;
+//     else document.getElementById("timerDisplay").textContent = "expired";
+//   }
+// }, 1000);
+
 }
