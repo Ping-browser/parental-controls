@@ -7,18 +7,9 @@ let timerId;
 let timeoutDuration;
 const startSessionTimeout = () => {
     startTime = Date.now();
+    chrome.storage.local.set({startTime: startTime})
     timerId = setTimeout(sessionTimeout, timeoutDuration);
 }
-
-// Function to update time in local storage every minute
-const updateTimeInLocalStorage = () => {
-    setInterval(async () => {
-        const currentTime = Date.now();
-        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
-    }, 1000); // 60000 milliseconds = 1 minute
-}
-
-updateTimeInLocalStorage();
 
 // Function to restart the timer with the remaining time when the first window is opened again
 const restartTimer = async () => {
@@ -56,15 +47,21 @@ chrome.windows.onCreated.addListener(async () => {
 chrome.tabs.onCreated.addListener(async (tab) => {
     await chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
         if (data.loggedIn && data.sessionTimeout) {
-            const tabUrl = tab.url;
-            if (tabUrl !== "chrome://extensions/") {
-
-                chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
-            }
+            chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
             blockHttpsSearch();
         }
     });
 });
+
+// Function to update time in local storage every minute
+const updateTimeInLocalStorage = () => {
+    setInterval(async () => {
+        const currentTime = Date.now();
+        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+    }, 60000); // 60000 milliseconds = 1 minute
+}
+
+updateTimeInLocalStorage();
 
 const sessionTimeout = async () => {
 
@@ -150,7 +147,7 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
     }
 }
 
-const kidsModeSignIn = async (password, checkedToggles, sendResponse) => {
+const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendResponse) => {
     try {
         await chrome.storage.local.get(['loggedIn', 'password'], async (data) => {
             const storedPassword = data.password;
@@ -161,9 +158,9 @@ const kidsModeSignIn = async (password, checkedToggles, sendResponse) => {
 
                 try {
                     await injectServiceWorker(checkedToggles)
-                    timeoutDuration = 1 * 60 * 1000
+                    timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
                     startSessionTimeout();
-                    await chrome.storage.local.set({ loggedIn: true }, () => {
+                    await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration }, () => {
                         if (chrome.runtime.lastError) {
                             console.error('Error storing data:', chrome.runtime.lastError);
                             sendResponse({ success: false });
@@ -210,7 +207,7 @@ const logoutUser = async (password, sendResponse) => {
             if (storedPassword === hash) {
                 removeServiceWorker();
                 clearTimeout(timerId);
-                await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false, timeLeft: 1 * 60 * 1000 },)
+                await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false})
 
                 sendResponse({ success: true });
 
@@ -281,7 +278,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
 
     } else if (request.action === 'login') {
-        kidsModeSignIn(request.password, request.checkedToggles, sendResponse);
+        kidsModeSignIn(request.password, request.checkedToggles, request.sessionTime, sendResponse);
         return true;
     } else if (request.action === 'logout') {
         logoutUser(request.password, sendResponse);

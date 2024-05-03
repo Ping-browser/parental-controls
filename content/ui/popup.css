@@ -1,38 +1,64 @@
-body{
+body {
   width: 260px;
   height: 200px;
   padding-bottom: 10%;
 }
 
-#signUpContainer{
-  display: flex;
-  flex-direction: column;
-}
-#signInContainer{
-  display: flex;
-  flex-direction: column;
-}
-#kidsContent{
+#signUpContainer {
   display: flex;
   flex-direction: column;
 }
 
-#container{
+#signInContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+#kidsContent {
+  display: flex;
+  flex-direction: column;
+}
+
+#container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-#status{
+#status {
   margin-bottom: 10px;
 }
 
-form{
+.session-time-container {
   display: flex;
-    flex-direction: column;
+  justify-content: center;
+  margin-top: 20px;
 }
 
-input{
+#sessionTime {
+  background-color: #dddfdd;
+  /* color: white; */
+  padding: 8px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.timerLabel {
+  font-weight: bold;
+  font-size: large;
+  margin-right: 10px;
+  color: #df8a1d;
+  display: flex;
+  align-items: center;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
   padding: 8px;
   border-radius: 5px;
   border: 2px solid #ece2d4;
@@ -40,7 +66,7 @@ input{
   display: flex;
 }
 
-input:focus{
+input:focus {
   outline: none;
   border-color: rgb(255, 190, 51);
   box-shadow: 0 0 3px rgb(255, 190, 51);
@@ -53,17 +79,18 @@ input[type="checkbox"]:checked {
 }
 
 .checkbox-container input[type="checkbox"],
-        .checkbox-container label {
-            display: inline;
-            vertical-align: middle;
-            font-weight: bold; 
-            font-size: large;
-        }
-        .checkbox-container{
-            margin-bottom: 10px;
-        }
+.checkbox-container label {
+  display: inline;
+  vertical-align: middle;
+  font-weight: bold;
+  font-size: large;
+}
 
-button{
+.checkbox-container {
+  margin-bottom: 10px;
+}
+
+button {
   margin-top: 25px;
   margin-bottom: 20px;
   padding: 0.6rem;

@@ -1,11 +1,12 @@
-import { injectServiceWorker } from "../../service_worker/background.js";
-
 document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
 
   await updatePopupContent();
+
+  setSessionTimer();
+  resizeDropdown();
 
   registerForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -52,11 +53,13 @@ const register = () => {
 
 //login
 const login = () => {
+  const sessionTimeSelect = document.getElementById("sessionTime"); 
   const loginPassword = document.getElementById("loginPassword");
   const statusDiv = document.getElementById("status");
   const passwordInput = document.getElementById("password");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
+  
   //array to store toggle elements and their checked status for service worker injection
   const toggles = [
     { id: "socialMediaToggle", element: socialToggle, checked: false },
@@ -68,12 +71,12 @@ const login = () => {
   const checkedToggles = toggles.filter((toggle) => toggle.checked);
 
   const pass = loginPassword.value;
-
   statusDiv.textContent = "";
 
+  const sessionTime = sessionTimeSelect.value;
   // Send login request to background script
   chrome.runtime.sendMessage(
-    { action: "login", password: pass, checkedToggles: checkedToggles },
+    { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime},
     async (response) => {
       if (response && response.success === true) {
         statusDiv.textContent = "Logged in successfully!";
@@ -93,7 +96,6 @@ const logout = () => {
   const passwordInput = document.getElementById("password");
 
   const pass2 = logoutPassword.value;
-
   statusDiv.textContent = "";
 
   chrome.runtime.sendMessage(
@@ -133,3 +135,36 @@ const updatePopupContent = async () => {
     }
   });
 };
+
+const setSessionTimer = () => {
+  // Get the select element
+const sessionTimeSelect = document.getElementById("sessionTime");
+
+// Array of numbers from 1 to 24
+const hours = Array.from({ length: 24 }, (_, index) => index + 1);
+
+// Iterate over the array to create options
+hours.forEach(hour => {
+const option = document.createElement("option");
+option.value = hour;
+option.text = hour + " Hr" + (hour !== 1 ? "s" : ""); // Pluralize "Hour" if hour is not 1
+sessionTimeSelect.appendChild(option);
+});
+}
+
+const resizeDropdown = () => {
+  const selectElement = document.querySelector('#sessionTime');
+  
+  selectElement.addEventListener('mousedown', function() {
+    if (this.options.length > 6) {
+      this.size = 6;
+    }
+  });
+  selectElement.addEventListener('change', function() {
+    this.size = 0;
+  });
+
+  selectElement.addEventListener('blur', function() {
+    this.size = 0;
+  });
+}
