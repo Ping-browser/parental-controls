@@ -55,6 +55,17 @@ const login = () => {
   const loginPassword = document.getElementById("loginPassword");
   const statusDiv = document.getElementById("status");
   const passwordInput = document.getElementById("password");
+  const socialToggle = document.getElementById("blockSocialMediaCheckbox");
+  const gamingToggle = document.getElementById("blockGamesCheckbox");
+  //array to store toggle elements and their checked status for service worker injection
+  const toggles = [
+    { id: "socialMediaToggle", element: socialToggle, checked: false },
+    { id: "gamingToggle", element: gamingToggle, checked: false },
+  ];
+  toggles.forEach((toggle) => {
+    toggle.checked = toggle.element.checked;
+  });
+  const checkedToggles = toggles.filter((toggle) => toggle.checked);
 
   const pass = loginPassword.value;
 
@@ -62,15 +73,11 @@ const login = () => {
 
   // Send login request to background script
   chrome.runtime.sendMessage(
-    { action: "login", password: pass },
-    (response) => {
+    { action: "login", password: pass, checkedToggles: checkedToggles },
+    async (response) => {
       if (response && response.success === true) {
         statusDiv.textContent = "Logged in successfully!";
-        toggles.forEach((toggle) => {
-          toggle.checked = toggle.element.checked;
-        });
-        handleServiceWorkerInjection();
-        updatePopupContent();
+        await updatePopupContent();
       } else {
         statusDiv.textContent = response.error;
         passwordInput.value = "";
@@ -125,19 +132,4 @@ const updatePopupContent = async () => {
       kidsContent.style.display = "none";
     }
   });
-};
-
-const socialToggle = document.getElementById("blockSocialMediaCheckbox");
-const gamingToggle = document.getElementById("blockGamesCheckbox");
-//array to store toggle elements and their checked status for service worker injection
-const toggles = [
-  { id: "socialMediaToggle", element: socialToggle, checked: false },
-  { id: "gamingToggle", element: gamingToggle, checked: false },
-];
-
-
-// Function to handle service worker injection based on toggle status and update the toggles array
-const handleServiceWorkerInjection = async () => {
-  const checkedToggles = toggles.filter((toggle) => toggle.checked);
-  await injectServiceWorker(checkedToggles);
 };
