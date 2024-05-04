@@ -27,6 +27,7 @@ const restartTimer = async () => {
             // console.log(timeoutDuration, "timeoutduration")
         });
     });
+    updateTimeInLocalStorage();
     startSessionTimeout()
 }
 
@@ -56,15 +57,18 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 });
 
 // Function to update time in local storage every minute
-const updateTimeInLocalStorage = () => {
-    setInterval(async () => {
-        const currentTime = Date.now();
-        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
-        // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime))
-    }, 60000); // 60000 milliseconds = 1 minute
+const updateTimeInLocalStorage = async () => {
+    await chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
+        if (data.loggedIn && !data.sessionTimeout) {
+            setInterval(async () => {
+                const currentTime = Date.now();
+                await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+                // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "hii")
+            }, 60000); // 60000 milliseconds = 1 minute
+        }
+    });
 }
 
-updateTimeInLocalStorage();
 
 const sessionTimeout = async () => {
 
