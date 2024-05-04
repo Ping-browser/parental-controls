@@ -2,8 +2,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
-  const sessionTimeSelect = document.getElementById("sessionTime");
-  const timerDisplay = document.getElementById("timerDisplay")
 
   await updatePopupContent();
 
@@ -178,15 +176,19 @@ const resizeDropdown = () => {
 
 // Function to fetch timeLeft from local storage and update UI
 const updateTimeLeftUI = () => {
-
-  let x = setInterval(async () => {
-    await chrome.storage.local.get("timeLeft", (data) => {
+  let x = setInterval(() => {
+    chrome.storage.local.get("timeLeft", (data) => {
       let distance = data.timeLeft;
-      let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      document.getElementById("timerDisplay").textContent = "Time Left : " + hours + "h "
-        + minutes + "m ";
-      if (distance < 0) {
+      if (distance !== undefined) {
+        let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        document.getElementById("timerDisplay").textContent = "Time Left : " + hours + "h "
+          + minutes + "m ";
+        if (distance <= 0) {
+          clearInterval(x);
+          document.getElementById("timerDisplay").textContent = "expired";
+        }
+      } else {
         clearInterval(x);
         document.getElementById("timerDisplay").textContent = "expired";
       }
