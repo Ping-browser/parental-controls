@@ -116,7 +116,7 @@ const logout = () => {
 };
 
 // Function to update popup content based on login status
-const updatePopupContent = async (args) => {
+const updatePopupContent = async () => {
   const signUpContainer = document.getElementById("signUpContainer");
   const kidsContent = document.getElementById("kidsContent");
   const signInContainer = document.getElementById("signInContainer");
