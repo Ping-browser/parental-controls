@@ -7,6 +7,7 @@ body {
 #signUpContainer {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 #signInContainer {
@@ -25,28 +26,34 @@ body {
   justify-content: center;
 }
 
-#status {
+#successStatus {
   margin-bottom: 10px;
+  color: rgb(2, 168, 2);
+}
+
+#errorStatus {
+  margin-bottom: 10px;
+  color: red;
 }
 
 .session-time-container {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 #sessionTime {
   background-color: #dddfdd;
   /* color: white; */
-  padding: 8px;
-  font-size: 16px;
+  padding: 4px;
+  font-size: 14px;
   border: none;
   cursor: pointer;
 }
 
 .timerLabel {
   font-weight: bold;
-  font-size: large;
+  font-size: 14px;
   margin-right: 10px;
   color: #df8a1d;
   display: flex;
@@ -87,7 +94,7 @@ input[type="checkbox"]:checked {
   display: inline;
   vertical-align: middle;
   font-weight: bold;
-  font-size: large;
+  font-size: 14px;
 }
 
 .checkbox-container {

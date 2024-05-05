@@ -29,21 +29,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 const register = () => {
   const cpasswordInput = document.getElementById("cpassword");
   const passwordInput = document.getElementById("password");
-  const statusDiv = document.getElementById("status");
+  const successStatusDiv = document.getElementById("successStatus");
+  const errorStatusDiv = document.getElementById("errorStatus");
+
 
   const pass1 = cpasswordInput.value;
   const pass2 = passwordInput.value;
 
-  statusDiv.textContent = "";
+  successStatusDiv.textContent = "";
+  errorStatusDiv.textContent = "";
 
   chrome.runtime.sendMessage(
     { action: "register", cpassword: pass1, password: pass2 },
     (response) => {
       if (response && response.success === true) {
-        statusDiv.textContent = "Password set successfully!";
+        successStatusDiv.textContent = "Password set successfully!";
         updatePopupContent();
       } else {
-        statusDiv.textContent = response.error;
+        errorStatusDiv.textContent = response.error;
         cpasswordInput.value = "";
         passwordInput.value = "";
       }
@@ -55,7 +58,8 @@ const register = () => {
 const login = async () => {
   const sessionTimeSelect = document.getElementById("sessionTime");
   const loginPassword = document.getElementById("loginPassword");
-  const statusDiv = document.getElementById("status");
+  const successStatusDiv = document.getElementById("successStatus");
+  const errorStatusDiv = document.getElementById("errorStatus");
   const passwordInput = document.getElementById("password");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
@@ -71,19 +75,20 @@ const login = async () => {
   const checkedToggles = toggles.filter((toggle) => toggle.checked);
 
   const pass = loginPassword.value;
-  statusDiv.textContent = "";
+  successStatusDiv.textContent = "";
+  errorStatusDiv.textContent = "";
 
   const sessionTime = sessionTimeSelect.value;
   // Send login request to background script
-  await chrome.runtime.sendMessage(
+  chrome.runtime.sendMessage(
     { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime },
     (response) => {
       if (response && response.success === true) {
-        statusDiv.textContent = "Logged in successfully!";
+        successStatusDiv.textContent = "Logged in successfully!";
         updatePopupContent();
 
       } else {
-        statusDiv.textContent = response.error;
+        errorStatusDiv.textContent = response.error;
         passwordInput.value = "";
       }
     }
@@ -93,20 +98,22 @@ const login = async () => {
 //logout
 const logout = () => {
   const logoutPassword = document.getElementById("logoutPassword");
-  const statusDiv = document.getElementById("status");
+  const successStatusDiv = document.getElementById("successStatus");
+  const errorStatusDiv = document.getElementById("errorStatus");
   const passwordInput = document.getElementById("password");
 
   const pass2 = logoutPassword.value;
-  statusDiv.textContent = "";
+  successStatusDiv.textContent = "";
+  errorStatusDiv.textContent = "";
 
   chrome.runtime.sendMessage(
     { action: "logout", password: pass2 },
     (response) => {
       if (response && response.success === true) {
-        statusDiv.textContent = "Logged out successfully!";
+        successStatusDiv.textContent = "Logged out successfully!";
         updatePopupContent();
       } else {
-        statusDiv.textContent = response.error;
+        errorStatusDiv.textContent = response.error;
         passwordInput.value = "";
       }
     }
@@ -151,6 +158,7 @@ const setSessionTimer = () => {
   hours.forEach(hour => {
     const option = document.createElement("option");
     option.value = hour;
+    option.style.fontSize = "14px";
     option.text = hour + " Hr" + (hour !== 1 ? "s" : ""); // Pluralize "Hour" if hour is not 1
     sessionTimeSelect.appendChild(option);
   });
@@ -175,23 +183,29 @@ const resizeDropdown = () => {
 };
 
 // Function to fetch timeLeft from local storage and update UI
-const updateTimeLeftUI = () => {
-  let x = setInterval(() => {
-    chrome.storage.local.get("timeLeft", (data) => {
-      let distance = data.timeLeft;
-      if (distance !== undefined) {
-        let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        document.getElementById("timerDisplay").textContent = "Time Left : " + hours + "h "
-          + minutes + "m ";
-        if (distance <= 0) {
-          clearInterval(x);
-          document.getElementById("timerDisplay").textContent = "expired";
+const updateTimeLeftUI = async () => {
+  const timerDisplay = document.getElementById("timerDisplay");
+
+  // Function to update the timer display
+  const updateTimer = async () => {
+    await chrome.storage.local.get("timeLeft", (data) => {
+      let timeLeft = data.timeLeft;
+      if (timeLeft !== undefined) {
+        let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        timerDisplay.textContent = "Time Left : " + hours + "h " + minutes + "m ";
+        if (timeLeft <= 0) {
+          clearInterval(intervalId);
+          timerDisplay.textContent = "expired";
         }
       } else {
-        clearInterval(x);
-        document.getElementById("timerDisplay").textContent = "expired";
+        clearInterval(intervalId);
+        timerDisplay.textContent = "expired";
       }
     });
-  }, 1000);
+  };
+
+  await updateTimer();
+
+  const intervalId = setInterval(updateTimer, 60000);
 };

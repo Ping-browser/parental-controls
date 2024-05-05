@@ -15,18 +15,9 @@ const startSessionTimeout = () => {
 // Function to restart the timer with the remaining time when the first window is opened again
 const restartTimer = async () => {
 
-    await new Promise((resolve, reject) => {
-        chrome.storage.local.get(['timeLeft'], (data) => {
-            if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-            } else {
-                resolve(data);
-            }
-
-            if(data.timeLeft) timeoutDuration = data.timeLeft;
-            // console.log(timeoutDuration, "timeoutduration")
-        });
-    });
+    const data = await chrome.storage.local.get(['timeLeft'])
+    if (data.timeLeft) timeoutDuration = data.timeLeft;
+    // console.log(timeoutDuration, "timeoutduration")
     updateTimeInLocalStorage();
     startSessionTimeout()
 }
@@ -58,15 +49,20 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
 // Function to update time in local storage every minute
 const updateTimeInLocalStorage = async () => {
-    await chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
-        if (data.loggedIn && !data.sessionTimeout) {
-            setInterval(async () => {
-                const currentTime = Date.now();
-                await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
-                // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "hii")
-            }, 60000); // 60000 milliseconds = 1 minute
+    const intervalId = setInterval(async () => {
+        let userData = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
+        if (userData.loggedIn && !userData.sessionTimeout) {
+            const currentTime = Date.now();
+            await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+            // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "  ", userData.loggedIn, "logedin", " sessionTimeout", userData.sessionTimeout)
+            if(timeoutDuration - (currentTime - startTime) < 0) {
+                sessionTimeout()
+                clearInterval(intervalId);
+            }
         }
-    });
+        else clearInterval(intervalId)
+
+    }, 60000); // 60000 milliseconds = 1 minute
 }
 
 
@@ -150,7 +146,7 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
     }
     else {
         // Confirm Password mismatch, send error response
-        sendResponse({ success: false, error: '*Passwords do not match' });
+        sendResponse({ success: false, error: 'Passwords do not match' });
     }
 }
 
@@ -193,7 +189,7 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
                 }}
             else {
                 // Password mismatch, send error response
-                sendResponse({ success: false, error: '*Invalid credentials' });
+                sendResponse({ success: false, error: 'Invalid password' });
             }
         });
 
@@ -230,7 +226,7 @@ const logoutUser = async (password, sendResponse) => {
                     type: 'normal'
                 });
             } else {
-                sendResponse({ success: false, error: '*Invalid Credentials' });
+                sendResponse({ success: false, error: 'Invalid password' });
             }
         });
 
