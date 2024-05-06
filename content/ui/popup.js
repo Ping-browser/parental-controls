@@ -2,11 +2,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
-
+  
   await updatePopupContent();
 
   setSessionTimer();
-  resizeDropdown();
 
   registerForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -56,14 +55,14 @@ const register = () => {
 
 //login
 const login = async () => {
-  const sessionTimeSelect = document.getElementById("sessionTime");
+  const sessionTimeInput = document.getElementById("sessionTime");
   const loginPassword = document.getElementById("loginPassword");
   const successStatusDiv = document.getElementById("successStatus");
   const errorStatusDiv = document.getElementById("errorStatus");
   const passwordInput = document.getElementById("password");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
-
+  
   //array to store toggle elements and their checked status for service worker injection
   const toggles = [
     { id: "socialMediaToggle", element: socialToggle, checked: false },
@@ -78,13 +77,13 @@ const login = async () => {
   successStatusDiv.textContent = "";
   errorStatusDiv.textContent = "";
 
-  const sessionTime = sessionTimeSelect.value;
+  const sessionTime = sessionTimeInput.value;
   // Send login request to background script
   chrome.runtime.sendMessage(
     { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime },
     (response) => {
       if (response && response.success === true) {
-        successStatusDiv.textContent = "Logged in successfully!";
+                successStatusDiv.textContent = "Logged in successfully!";
         updatePopupContent();
 
       } else {
@@ -127,13 +126,13 @@ const updatePopupContent = async () => {
   const signInContainer = document.getElementById("signInContainer");
   await chrome.storage.local.get(["loggedIn"], (data) => {
 
-    updateTimeLeftUI()
 
     if (data.loggedIn) {
       // User is logged in
       signUpContainer.style.display = "none";
       signInContainer.style.display = "none";
       kidsContent.style.display = "block";
+      updateTimeLeftUI()
     } else if (data.loggedIn === false) {
       // User is not logged in
       signUpContainer.style.display = "none";
@@ -148,58 +147,42 @@ const updatePopupContent = async () => {
 };
 
 const setSessionTimer = () => {
-  // Get the select element
-  const sessionTimeSelect = document.getElementById("sessionTime");
+  // Get the input element
+  const sessionTimeInput = document.getElementById("sessionTime");
+  const sessionTimeSpan = document.getElementById("sessionTimeSpan");
 
-  // Array of numbers from 1 to 24
-  const hours = Array.from({ length: 24 }, (_, index) => index + 1);
 
-  // Iterate over the array to create options
-  hours.forEach(hour => {
-    const option = document.createElement("option");
-    option.value = hour;
-    option.style.fontSize = "14px";
-    option.text = hour + " Hr" + (hour !== 1 ? "s" : ""); // Pluralize "Hour" if hour is not 1
-    sessionTimeSelect.appendChild(option);
-  });
-}
-
-const resizeDropdown = () => {
-  const selectElement = document.getElementById("sessionTime");
-
-  selectElement.addEventListener('mousedown', () => {
-    if (selectElement.options.length > 6) {
-      selectElement.size = 6;
+  // Restrict input to numbers from 1 to 24
+  sessionTimeInput.addEventListener('input', () => {
+    let value = parseInt(sessionTimeInput.value);
+    if (isNaN(value) || value < 1) {
+      sessionTimeInput.value = 1; // Redirect to 1 if value is less than 1 or NaN
+    } else if (value > 24) {
+      sessionTimeInput.value = 24; // Redirect to 24 if value is greater than 24
     }
   });
 
-  selectElement.addEventListener('change', () => {
-    selectElement.size = 0;
-  });
-
-  selectElement.addEventListener('blur', () => {
-    selectElement.size = 0;
-  });
-};
+    sessionTimeSpan.textContent = " Hr" 
+}
 
 // Function to fetch timeLeft from local storage and update UI
 const updateTimeLeftUI = async () => {
   const timerDisplay = document.getElementById("timerDisplay");
 
-  // Function to update the timer display
-  const updateTimer = async () => {
-    await chrome.storage.local.get("timeLeft", (data) => {
-      let timeLeft = data.timeLeft;
-      if (timeLeft !== undefined) {
+    // Function to update the timer display
+    const updateTimer = async () => {
+        await chrome.storage.local.get("timeLeft", (data) => {
+            let timeLeft = data.timeLeft;
+            if (timeLeft !== undefined) {
         let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         timerDisplay.textContent = "Time Left : " + hours + "h " + minutes + "m ";
         if (timeLeft <= 0) {
-          clearInterval(intervalId);
+                    clearInterval(intervalId);
           timerDisplay.textContent = "expired";
         }
       } else {
-        clearInterval(intervalId);
+                clearInterval(intervalId);
         timerDisplay.textContent = "expired";
       }
     });

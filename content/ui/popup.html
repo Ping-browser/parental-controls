@@ -12,7 +12,7 @@
   <div id="container" style="display: flex; flex-direction: column;">
     <div id="popupContainers">
       <div id="signUpContainer">
-        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px;">Kids mode</h1></div>
+        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px; margin-bottom: 15px;">Kids mode</h1></div>
         <form id="registerForm">
           <input type="password" id="password" placeholder="Password">
           <input type="password" id="cpassword" placeholder="Confirm password">
@@ -20,7 +20,7 @@
         </form>
       </div>
       <div id="signInContainer">
-        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px;">Kids mode</h1></div>
+        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px; margin-bottom: 15px;">Kids mode</h1></div>
         <form id="loginForm">
           <input type="password" id="loginPassword" placeholder="Password">
           <div style="display: flex; flex-direction: column; margin-bottom: 10px; margin-top: 15px;">
@@ -35,8 +35,9 @@
             </div>
             <div class="session-time-container">
               <label for="sessionTime" class="timerLabel">Set timer</label>
-              <select id="sessionTime" name="sessionTime">
-              </select>
+              <input id="sessionTime" type="number" value="1" name="sessionTime">
+              </input>
+              <span id="sessionTimeSpan" style="display: flex; align-items: center; margin-left: 2px; font-weight: bold;"></span>
             </div>
           </div>
           <button type="submit" id="loginBtn">Start kids mode</button>
@@ -44,7 +45,7 @@
         
       </div>
       <div id="kidsContent">
-        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px;">Exit kids mode</h1></div>
+        <div style="display: flex; justify-content: center;"><h1 style="font-size: 18px; margin-bottom: 15px;">Exit kids mode</h1></div>
         <form id="logoutForm">
           <input type="password" id="logoutPassword" placeholder="Password">
           <button type="submit" style="padding: 10px;" id="logoutBtn">Logout</button>
@@ -56,7 +57,7 @@
     </div>
     <div id="successStatus"></div>
     <div id="errorStatus"></div>
-  </div>
+      </div>
   <script src="./popup.js" type="module"></script>
 </body>
 

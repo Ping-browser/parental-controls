@@ -38,11 +38,11 @@ chrome.windows.onCreated.addListener(async () => {
 
 });
 
-chrome.tabs.onCreated.addListener(async (tab) => {
+chrome.tabs.onCreated.addListener(async (tab) => {    
     await chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
         if (data.loggedIn && data.sessionTimeout) {
             chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
-            blockHttpsSearch();
+            blockHttpsSearch(); 
         }
     });
 });
@@ -86,10 +86,12 @@ const sessionTimeout = async () => {
     )
 }
 
+let ruleAdded = false;
 // Function to block Google search URLs
 const blockHttpsSearch = async () => {
+    if(ruleAdded) return;
     const blockRule = {
-        id: 1,
+        id: 999,
         priority: 1,
         action: {
             type: 'block'
@@ -104,12 +106,13 @@ const blockHttpsSearch = async () => {
         removeRuleIds: [],
         addRules: [blockRule]
     });
+    ruleAdded = true;
 }
 
 // Function to allow Google search URLs
 const allowHttpsSearchAsync = async () => {
     await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: [1],
+        removeRuleIds: [999],
         addRules: []
     }
     )}
@@ -160,6 +163,10 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
             if (storedPassword === hash) {
 
                 try {
+                    chrome.action.setIcon({
+                        path: "../assets/Logo_active.png",
+                    });
+            
                     await injectServiceWorker(checkedToggles)
                     timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
                     startSessionTimeout();
@@ -208,6 +215,9 @@ const logoutUser = async (password, sendResponse) => {
 
             // Check if the provided password matches the stored password
             if (storedPassword === hash) {
+                chrome.action.setIcon({
+                    path: "../assets/Logo_inactive.png",
+                });
                 removeServiceWorker();
                 clearTimeout(timerId);
                 await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false})
@@ -238,6 +248,8 @@ const logoutUser = async (password, sendResponse) => {
 }
 
 export const injectServiceWorker = async (checkedToggles) => {
+
+    if(!checkedToggles) return;
     const rulesToInject = [];
     const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
     const oldRulesIds = oldRules.map(rule => rule.id);

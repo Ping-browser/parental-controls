@@ -19,15 +19,15 @@
     "default_popup": "/content/ui/popup.html",
     "default_position": "center",
     "default_icon": {
-      "16": "/assets/Logo.png",
-      "48": "/assets/Logo.png",
-      "128": "/assets/Logo.png"
+      "38": "/assets/Logo_inactive.png",
+      "48": "/assets/Logo_active.png",
+      "128": "/assets/Logo_inactive.png"
     }
   },
 
   "icons": {
-    "16": "/assets/Logo.png",
-    "48": "/assets/Logo.png",
-    "128": "/assets/Logo.png"
+    "38": "/assets/Logo_inactive.png",
+    "48": "/assets/Logo_active.png",
+    "128": "/assets/Logo_inactive.png"
   }
 }
