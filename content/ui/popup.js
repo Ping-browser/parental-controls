@@ -2,10 +2,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
+  const resetPasswordLink = document.getElementById("resetPasswordLink"); 
   
   await updatePopupContent();
-
-  setSessionTimer();
 
   registerForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -21,6 +20,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     event.preventDefault();
     logout();
   });
+
+  resetPasswordLink.addEventListener("click", (event) => { // Add this block
+    event.preventDefault();
+    handleResetPassword()
+  });
+
 });
 
 
@@ -124,6 +129,12 @@ const updatePopupContent = async () => {
   const signUpContainer = document.getElementById("signUpContainer");
   const kidsContent = document.getElementById("kidsContent");
   const signInContainer = document.getElementById("signInContainer");
+  const successStatusDiv = document.getElementById("successStatus");
+  const errorStatusDiv = document.getElementById("errorStatus");
+  
+  successStatusDiv.textContent = "";
+  errorStatusDiv.textContent = "";
+
   await chrome.storage.local.get(["loggedIn"], (data) => {
 
 
@@ -146,23 +157,16 @@ const updatePopupContent = async () => {
   });
 };
 
-const setSessionTimer = () => {
-  // Get the input element
-  const sessionTimeInput = document.getElementById("sessionTime");
-  const sessionTimeSpan = document.getElementById("sessionTimeSpan");
+const handleResetPassword = () => {
+  const successStatusDiv = document.getElementById("successStatus");
+  const errorStatusDiv = document.getElementById("errorStatus");
+  const signUpContainer = document.getElementById("signUpContainer");
+  const signInContainer = document.getElementById("signInContainer");
 
-
-  // Restrict input to numbers from 1 to 24
-  sessionTimeInput.addEventListener('input', () => {
-    let value = parseInt(sessionTimeInput.value);
-    if (isNaN(value) || value < 1) {
-      sessionTimeInput.value = 1; // Redirect to 1 if value is less than 1 or NaN
-    } else if (value > 24) {
-      sessionTimeInput.value = 24; // Redirect to 24 if value is greater than 24
-    }
-  });
-
-    sessionTimeSpan.textContent = " Hr" 
+    successStatusDiv.textContent = "";
+    errorStatusDiv.textContent = "";
+    signInContainer.style.display = "none";
+    signUpContainer.style.display = "block";
 }
 
 // Function to fetch timeLeft from local storage and update UI

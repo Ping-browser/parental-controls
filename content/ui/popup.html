@@ -35,12 +35,15 @@
             </div>
             <div class="session-time-container">
               <label for="sessionTime" class="timerLabel">Set timer</label>
-              <input id="sessionTime" type="number" value="1" name="sessionTime">
+              <input id="sessionTime" type="number" value="1" min="1" max="5" name="sessionTime">
               </input>
-              <span id="sessionTimeSpan" style="display: flex; align-items: center; margin-left: 2px; font-weight: bold;"></span>
+              <span id="sessionTimeSpan" style="display: flex; align-items: center; margin-left: 2px; font-weight: bold;">Hr</span>
             </div>
           </div>
           <button type="submit" id="loginBtn">Start kids mode</button>
+          <div style="display: flex; justify-content: center;">
+            <span id="resetPasswordLink" style="color: #a35e15; cursor: pointer;">Reset password</span>
+          </div>
         </form>
         
       </div>

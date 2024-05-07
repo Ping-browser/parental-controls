@@ -21,6 +21,9 @@ const restartTimer = async () => {
         });
     }, 20000); // Ping every 10 seconds
     if (!data.loggedIn || data.sessionTimeout) return;
+    if(data.loggedIn) {chrome.action.setIcon({
+        path: "../assets/Logo_active.png",
+    });}
     if (data.timeLeft) timeoutDuration = data.timeLeft;
     // console.log(timeoutDuration, "timeoutduration")
     await updateTimeInLocalStorage();
@@ -53,11 +56,11 @@ const updateTimeInLocalStorage = async () => {
             const currentTime = Date.now();
             await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
             // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "  ", userData.loggedIn, "logedin", " sessionTimeout", userData.sessionTimeout)
-            if (timeoutDuration - (currentTime - startTime) < 0) {
+            if (timeoutDuration - (currentTime - startTime) <= 0) {
                 sessionTimeout()
                 clearInterval(intervalId);
             }
-    }, 60000); // 60000 milliseconds = 1 minute
+    }, 50000); // 50000 milliseconds = 50 sec
 }
 
 
