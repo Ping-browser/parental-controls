@@ -5,63 +5,58 @@ import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
 let startTime;
 let timerId;
 let timeoutDuration;
-const startSessionTimeout = () => {
+const startSessionTimeout = async () => {
     startTime = Date.now();
-    chrome.storage.local.set({startTime: startTime})
+    await chrome.storage.local.set({ startTime: startTime })
     timerId = setTimeout(sessionTimeout, timeoutDuration);
     // console.log("startSessionTimer", timeoutDuration,)
 }
 
 // Function to restart the timer with the remaining time when the first window is opened again
 const restartTimer = async () => {
-
-    const data = await chrome.storage.local.get(['timeLeft'])
+    const data = await chrome.storage.local.get(['timeLeft', 'loggedIn', 'sessionTimeout'])
+    const pingInterval = setInterval(() => {
+        chrome.runtime.sendMessage({
+            status: "ping",
+        });
+    }, 20000); // Ping every 10 seconds
+    if (!data.loggedIn || data.sessionTimeout) return;
     if (data.timeLeft) timeoutDuration = data.timeLeft;
     // console.log(timeoutDuration, "timeoutduration")
-    updateTimeInLocalStorage();
+    await updateTimeInLocalStorage();
     startSessionTimeout()
 }
 
-
 // Listener for when a window is created
 chrome.windows.onCreated.addListener(async () => {
-    await chrome.storage.local.get(['loggedIn', 'sessionTimeout', 'timeLeft'], (data) => {
-        chrome.windows.getAll({ populate: false }, async (windows) => {
-            if (windows.length === 1) {
-                if (data.loggedIn && data.sessionTimeout != true) {
-                    restartTimer();
-                    await injectServiceWorker()
-                }
+    const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout', 'timeLeft'])
+    chrome.windows.getAll({ populate: false }, async (windows) => {
+        if (windows.length === 1) {
+            if (data.loggedIn && data.sessionTimeout != true) {
+                restartTimer();
             }
-        });
-    });
-
-});
-
-chrome.tabs.onCreated.addListener(async (tab) => {    
-    await chrome.storage.local.get(['loggedIn', 'sessionTimeout'], (data) => {
-        if (data.loggedIn && data.sessionTimeout) {
-            chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
-            blockHttpsSearch(); 
         }
     });
+});
+
+chrome.tabs.onCreated.addListener(async (tab) => {
+    const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
+    if (data.loggedIn && data.sessionTimeout) {
+        chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
+        blockHttpsSearch();
+    }
 });
 
 // Function to update time in local storage every minute
 const updateTimeInLocalStorage = async () => {
     const intervalId = setInterval(async () => {
-        let userData = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
-        if (userData.loggedIn && !userData.sessionTimeout) {
             const currentTime = Date.now();
             await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
             // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "  ", userData.loggedIn, "logedin", " sessionTimeout", userData.sessionTimeout)
-            if(timeoutDuration - (currentTime - startTime) < 0) {
+            if (timeoutDuration - (currentTime - startTime) < 0) {
                 sessionTimeout()
                 clearInterval(intervalId);
             }
-        }
-        else clearInterval(intervalId)
-
     }, 60000); // 60000 milliseconds = 1 minute
 }
 
@@ -134,14 +129,13 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
     if (cpassword === password) {
         try {
             const hash = await hashPassword(password)
-            await chrome.storage.local.set({ loggedIn: false, password: hash }, () => {
-                if (chrome.runtime.lastError) {
-                    console.error('Error storing data:', chrome.runtime.lastError);
-                    sendResponse({ success: false });
-                } else if (cpassword && password) {
-                    sendResponse({ success: true });
-                }
-            });
+            await chrome.storage.local.set({ loggedIn: false, password: hash })
+            if (chrome.runtime.lastError) {
+                console.error('Error storing data:', chrome.runtime.lastError);
+                sendResponse({ success: false });
+            } else if (cpassword && password) {
+                sendResponse({ success: true });
+            }
         }
         catch (error) {
             console.error('Error hashing password:', error);
@@ -155,91 +149,87 @@ const kidsModeSignUp = async (cpassword, password, sendResponse) => {
 
 const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendResponse) => {
     try {
-        await chrome.storage.local.get(['loggedIn', 'password'], async (data) => {
-            const storedPassword = data.password;
+        const data = await chrome.storage.local.get(['loggedIn', 'password']);
+        const storedPassword = data.password;
 
-            const hash = await hashPassword(password);
+        const hash = await hashPassword(password);
 
-            if (storedPassword === hash) {
+        if (storedPassword === hash) {
 
-                try {
-                    chrome.action.setIcon({
-                        path: "../assets/Logo_active.png",
+            try {
+                chrome.action.setIcon({
+                    path: "../assets/Logo_active.png",
+                });
+                                
+                await injectServiceWorker(checkedToggles)
+                timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
+                await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration })
+                startSessionTimeout();
+                if (chrome.runtime.lastError) {
+                    console.error('Error storing data:', chrome.runtime.lastError);
+                    sendResponse({ success: false });
+                } else {
+                    sendResponse({ success: true });
+
+                    // Close current windows
+                    chrome.windows.getAll({ populate: true }, (windows) => {
+                        windows.forEach((window) => {
+                            chrome.windows.remove(window.id);
+                        });
                     });
-            
-                    await injectServiceWorker(checkedToggles)
-                    timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
-                    startSessionTimeout();
-                    await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration }, () => {
-                        if (chrome.runtime.lastError) {
-                            console.error('Error storing data:', chrome.runtime.lastError);
-                            sendResponse({ success: false });
-                        } else {
-                            sendResponse({ success: true });
 
-                            // Close current windows
-                            chrome.windows.getAll({ populate: true }, (windows) => {
-                                windows.forEach((window) => {
-                                    chrome.windows.remove(window.id);
-                                });
-                            });
-
-                            // Create a new window
-                            chrome.windows.create({
-                                type: 'normal'
-                            });
-                        }
+                    // Create a new window
+                    chrome.windows.create({
+                        type: 'normal'
                     });
                 }
-                catch (error) {
-                    console.error('Error logging in:', error);
-                }}
-            else {
-                // Password mismatch, send error response
-                sendResponse({ success: false, error: 'Invalid password' });
             }
-        });
+            catch (error) {
+                console.error('Error logging in:', error);
+            }
+        }
+        else {
+            // Password mismatch, send error response
+            sendResponse({ success: false, error: 'Invalid password' });
+        }
 
-
-    }catch(error){
+    } catch (error) {
         console.error('Error logging in:', error);
     }
 }
 // Function to handle user logout
 const logoutUser = async (password, sendResponse) => {
     try {
-        await chrome.storage.local.get(['loggedIn', 'password'], async (data) => {
-            const storedPassword = data.password;
+        const data = await chrome.storage.local.get(['loggedIn', 'password'])
+        const storedPassword = data.password;
 
-            const hash = await hashPassword(password);
+        const hash = await hashPassword(password);
 
-            // Check if the provided password matches the stored password
-            if (storedPassword === hash) {
-                chrome.action.setIcon({
-                    path: "../assets/Logo_inactive.png",
+        // Check if the provided password matches the stored password
+        if (storedPassword === hash) {
+            chrome.action.setIcon({
+                path: "../assets/Logo_inactive.png",
+            });
+            removeServiceWorker();
+            clearTimeout(timerId);
+            await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false })
+
+            sendResponse({ success: true });
+
+            await allowHttpsSearchAsync();
+
+            chrome.windows.getAll({ populate: true }, (windows) => {
+                windows.forEach((window) => {
+                    chrome.windows.remove(window.id);
                 });
-                removeServiceWorker();
-                clearTimeout(timerId);
-                await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false})
+            });
 
-                sendResponse({ success: true });
-
-                await allowHttpsSearchAsync();
-
-                chrome.windows.getAll({ populate: true }, (windows) => {
-                    windows.forEach((window) => {
-                        chrome.windows.remove(window.id);
-                    });
-                });
-
-                chrome.windows.create({
-                    type: 'normal'
-                });
-            } else {
-                sendResponse({ success: false, error: 'Invalid password' });
-            }
-        });
-
+            chrome.windows.create({
+                type: 'normal'
+            });
+        } else {
+            sendResponse({ success: false, error: 'Invalid password' });
+        }
 
     } catch (error) {
         console.error('Error logging out:', error);

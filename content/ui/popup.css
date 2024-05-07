@@ -4,6 +4,10 @@ body {
   padding-bottom: 10%;
 }
 
+#container {
+  min-height: 335px;
+}
+
 #signUpContainer {
   display: flex;
   flex-direction: column;
@@ -27,12 +31,14 @@ body {
 }
 
 #successStatus {
-  margin-bottom: 10px;
+  display: block;
+  height: 10px;
   color: rgb(2, 168, 2);
 }
 
 #errorStatus {
-  margin-bottom: 10px;
+  display: block;
+  height: 10px;
   color: red;
 }
 

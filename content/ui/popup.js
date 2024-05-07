@@ -176,7 +176,7 @@ const updateTimeLeftUI = async () => {
             if (timeLeft !== undefined) {
         let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        timerDisplay.textContent = "Time Left : " + hours + "h " + minutes + "m ";
+        timerDisplay.textContent = "Time left : " + hours + "h " + minutes + "m ";
         if (timeLeft <= 0) {
                     clearInterval(intervalId);
           timerDisplay.textContent = "expired";
@@ -192,3 +192,10 @@ const updateTimeLeftUI = async () => {
 
   const intervalId = setInterval(updateTimer, 60000);
 };
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.status === "ping") {
+    console.log("Received ping from service worker");
+    return true;
+  }
+});

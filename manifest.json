@@ -21,13 +21,13 @@
     "default_icon": {
       "38": "/assets/Logo_inactive.png",
       "48": "/assets/Logo_active.png",
-      "128": "/assets/Logo_inactive.png"
+      "128": "/assets/Logo_active.png"
     }
   },
 
   "icons": {
     "38": "/assets/Logo_inactive.png",
     "48": "/assets/Logo_active.png",
-    "128": "/assets/Logo_inactive.png"
+    "128": "/assets/Logo_active.png"
   }
 }
