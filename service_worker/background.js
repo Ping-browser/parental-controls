@@ -51,7 +51,7 @@ const updateTimeInLocalStorage = async (startTime, timeoutDuration) => {
         if (timeoutDuration - (currentTime - startTime) < 0) {
             clearInterval(intervalId)
         }
-    }, 20000); // 30000 milliseconds = 30 sec
+    }, 20000); // 20000 milliseconds = 20 sec
 }
 
 const sessionTimeout = async () => {
