@@ -2,8 +2,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const logoutForm = document.getElementById("logoutForm");
-  const resetPasswordLink = document.getElementById("resetPasswordLink"); 
-  
+  const resetPasswordLink = document.getElementById("resetPasswordLink");
+
+  updatePopupDetails()
   await updatePopupContent();
 
   registerForm.addEventListener("submit", (event) => {
@@ -25,7 +26,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     event.preventDefault();
     handleResetPassword()
   });
-
 });
 
 
@@ -46,7 +46,7 @@ const register = () => {
   chrome.runtime.sendMessage(
     { action: "register", cpassword: pass1, password: pass2 },
     (response) => {
-      if (response && response.success === true) {
+      if (response && response.status === true) {
         successStatusDiv.textContent = "Password set successfully!";
         updatePopupContent();
         loginPassword.value = "";
@@ -68,7 +68,7 @@ const login = async () => {
   const passwordInput = document.getElementById("password");
   const socialToggle = document.getElementById("blockSocialMediaCheckbox");
   const gamingToggle = document.getElementById("blockGamesCheckbox");
-  
+
   //array to store toggle elements and their checked status for service worker injection
   const toggles = [
     { id: "socialMediaToggle", element: socialToggle, checked: false },
@@ -84,12 +84,14 @@ const login = async () => {
   errorStatusDiv.textContent = "";
 
   const sessionTime = sessionTimeInput.value;
+
+  await chrome.storage.local.set({ timeSelected: sessionTime, checkedToggles: checkedToggles })
   // Send login request to background script
   chrome.runtime.sendMessage(
     { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime },
     (response) => {
-      if (response && response.success === true) {
-                successStatusDiv.textContent = "Logged in successfully!";
+      if (response && response.status === true) {
+        successStatusDiv.textContent = "Logged in successfully!";
         updatePopupContent();
 
       } else {
@@ -114,7 +116,7 @@ const logout = () => {
   chrome.runtime.sendMessage(
     { action: "logout", password: pass2 },
     (response) => {
-      if (response && response.success === true) {
+      if (response && response.status === true) {
         successStatusDiv.textContent = "Logged out successfully!";
         updatePopupContent();
       } else {
@@ -132,7 +134,7 @@ const updatePopupContent = async () => {
   const signInContainer = document.getElementById("signInContainer");
   const successStatusDiv = document.getElementById("successStatus");
   const errorStatusDiv = document.getElementById("errorStatus");
-  
+
   successStatusDiv.textContent = "";
   errorStatusDiv.textContent = "";
 
@@ -166,32 +168,52 @@ const handleResetPassword = () => {
   const signUpContainer = document.getElementById("signUpContainer");
   const signInContainer = document.getElementById("signInContainer");
 
-    successStatusDiv.textContent = "";
-    errorStatusDiv.textContent = "";
-    cpasswordInput.value = "";
-    passwordInput.value = "";
-    signInContainer.style.display = "none";
-    signUpContainer.style.display = "block";
+  successStatusDiv.textContent = "";
+  errorStatusDiv.textContent = "";
+  cpasswordInput.value = "";
+  passwordInput.value = "";
+  signInContainer.style.display = "none";
+  signUpContainer.style.display = "block";
+}
+
+const updatePopupDetails = async () => {
+  const sessionTimeInput = document.getElementById("sessionTime");
+  const socialToggle = document.getElementById("blockSocialMediaCheckbox");
+  const gamingToggle = document.getElementById("blockGamesCheckbox");
+
+  const data = await chrome.storage.local.get(["timeSelected", "checkedToggles"]);
+  if (data.timeSelected > 0) sessionTimeInput.value = data.timeSelected;
+
+  const toggles = [
+    { id: "socialMediaToggle", element: socialToggle, checked: false },
+    { id: "gamingToggle", element: gamingToggle, checked: false },
+  ];
+  if (data.checkedToggles) {
+    data.checkedToggles.forEach((checkedToggle) => {
+      const toggle = toggles.find((t) => t.id === checkedToggle.id);
+      toggle.element.checked = true;
+    });
+  }
 }
 
 // Function to fetch timeLeft from local storage and update UI
 const updateTimeLeftUI = async () => {
   const timerDisplay = document.getElementById("timerDisplay");
-    
-    // Function to update the timer display
-    const updateTimer = async () => {
-        await chrome.storage.local.get("timeLeft", (data) => {
-                      let timeLeft = data.timeLeft;
-            if (timeLeft !== undefined) {
+
+  // Function to update the timer display
+  const updateTimer = async () => {
+    await chrome.storage.local.get("timeLeft", (data) => {
+      let timeLeft = data.timeLeft;
+      if (timeLeft !== undefined) {
         let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         timerDisplay.textContent = "Time left : " + hours + "h " + minutes + "m ";
         if (timeLeft <= 0) {
-                    clearInterval(intervalId);
+          clearInterval(intervalId);
           timerDisplay.textContent = "Time's up";
         }
       } else {
-                clearInterval(intervalId);
+        clearInterval(intervalId);
         timerDisplay.textContent = "Time's up";
       }
     });
@@ -199,5 +221,5 @@ const updateTimeLeftUI = async () => {
 
   await updateTimer();
 
-  const intervalId = setInterval(updateTimer, 60000);
+  const intervalId = setInterval(updateTimer, 30000);
 };
