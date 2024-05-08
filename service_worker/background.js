@@ -46,8 +46,6 @@ const updateTimeInLocalStorage = async (startTime, timeoutDuration) => {
         const currentTime = Date.now();
         await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
         if (timeoutDuration - (currentTime - startTime) < 0) {
-            await chrome.storage.local.set({ timeLeft: 1000 })
-            startTimer()
             clearInterval(intervalId)
         }
     }, 30000); // 30000 milliseconds = 30 sec
