@@ -39,11 +39,11 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 // Function to update time in local storage every minute
 let intervalId;
 const updateTimeInLocalStorage = async (timeLeft) => {
-    let t = 0;
+    let timeLapsed = 0;
     intervalId = setInterval(async () => {
         const currentTime = Date.now();
-        t += 20000;
-        await chrome.storage.local.set({ timeLeft: timeLeft - t })
+        timeLapsed += 20000;
+        await chrome.storage.local.set({ timeLeft: timeLeft - timeLapsed })
         if (timeLeft - (currentTime - startTime) < 0) {
             clearInterval(intervalId)
         }
@@ -245,7 +245,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'register') {
         kidsModeSignUp(request.cpassword, request.password, sendResponse);
         return true;
-
     } else if (request.action === 'login') {
         kidsModeSignIn(request.password, request.checkedToggles, request.sessionTime, sendResponse);
         return true;

@@ -140,7 +140,6 @@ const updatePopupContent = async () => {
 
   await chrome.storage.local.get(["loggedIn"], (data) => {
 
-
     if (data.loggedIn) {
       // User is logged in
       signUpContainer.style.display = "none";
