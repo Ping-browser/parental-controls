@@ -5,21 +5,22 @@ import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
 let timerId;
 // Function to restart the timer with the remaining time when the first window is opened again
 const startTimer = async () => {
-    try{
+    try {
         const data = await chrome.storage.local.get(['timeLeft', 'loggedIn', 'sessionTimeout'])
-    if (!data.loggedIn || data.sessionTimeout) return;
-    if (data.loggedIn) {
-        chrome.action.setIcon({
-            path: "../assets/Logo_active.png",
-        });
-    }
-    if (data.timeLeft) {
-        const startTime = Date.now();
-        timerId = setTimeout(sessionTimeout, data.timeLeft);
-        updateTimeInLocalStorage(startTime, data.timeLeft);
+        if (!data.loggedIn || data.sessionTimeout) return;
+        if (data.loggedIn) {
+            chrome.action.setIcon({
+                path: "../assets/Logo_active.png",
+            });
+        }
+        if (data.timeLeft) {
+            const startTime = Date.now();
+            await chrome.storage.local.set({startTime: Date.now()})
+            timerId = setTimeout(sessionTimeout, data.timeLeft);
+            updateTimeInLocalStorage(startTime, data.timeLeft);
         }
     }
-    catch(error){
+    catch (error) {
         console.error("error starting timer ", error)
     }
 }
@@ -41,16 +42,17 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 });
 
 // Function to update time in local storage every minute
+let intervalId;
 const updateTimeInLocalStorage = async (startTime, timeoutDuration) => {
-    const intervalId = setInterval(async () => {
+    const data = await chrome.storage.local.get(["startTime"]);
+    intervalId = setInterval(async () => {
         const currentTime = Date.now();
-        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - data.startTime) })
         if (timeoutDuration - (currentTime - startTime) < 0) {
             clearInterval(intervalId)
         }
-    }, 30000); // 30000 milliseconds = 30 sec
+    }, 20000); // 30000 milliseconds = 30 sec
 }
-
 
 const sessionTimeout = async () => {
 
@@ -198,6 +200,7 @@ const logoutUser = async (password, sendResponse) => {
             });
             removeServiceWorker();
             clearTimeout(timerId);
+            clearInterval(intervalId)
             await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false })
 
             sendResponse({ success: true });
