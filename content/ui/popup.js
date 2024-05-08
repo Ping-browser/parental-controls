@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     logout();
   });
 
-  resetPasswordLink.addEventListener("click", (event) => { // Add this block
+  resetPasswordLink.addEventListener("click", (event) => {
     event.preventDefault();
     handleResetPassword()
   });
@@ -35,7 +35,7 @@ const register = () => {
   const passwordInput = document.getElementById("password");
   const successStatusDiv = document.getElementById("successStatus");
   const errorStatusDiv = document.getElementById("errorStatus");
-
+  const loginPassword = document.getElementById("loginPassword");
 
   const pass1 = cpasswordInput.value;
   const pass2 = passwordInput.value;
@@ -49,6 +49,7 @@ const register = () => {
       if (response && response.success === true) {
         successStatusDiv.textContent = "Password set successfully!";
         updatePopupContent();
+        loginPassword.value = "";
       } else {
         errorStatusDiv.textContent = response.error;
         cpasswordInput.value = "";
@@ -158,6 +159,8 @@ const updatePopupContent = async () => {
 };
 
 const handleResetPassword = () => {
+  const cpasswordInput = document.getElementById("cpassword");
+  const passwordInput = document.getElementById("password");
   const successStatusDiv = document.getElementById("successStatus");
   const errorStatusDiv = document.getElementById("errorStatus");
   const signUpContainer = document.getElementById("signUpContainer");
@@ -165,6 +168,8 @@ const handleResetPassword = () => {
 
     successStatusDiv.textContent = "";
     errorStatusDiv.textContent = "";
+    cpasswordInput.value = "";
+    passwordInput.value = "";
     signInContainer.style.display = "none";
     signUpContainer.style.display = "block";
 }
@@ -172,22 +177,22 @@ const handleResetPassword = () => {
 // Function to fetch timeLeft from local storage and update UI
 const updateTimeLeftUI = async () => {
   const timerDisplay = document.getElementById("timerDisplay");
-
+    
     // Function to update the timer display
     const updateTimer = async () => {
         await chrome.storage.local.get("timeLeft", (data) => {
-            let timeLeft = data.timeLeft;
+                      let timeLeft = data.timeLeft;
             if (timeLeft !== undefined) {
         let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         timerDisplay.textContent = "Time left : " + hours + "h " + minutes + "m ";
         if (timeLeft <= 0) {
                     clearInterval(intervalId);
-          timerDisplay.textContent = "expired";
+          timerDisplay.textContent = "Time's up";
         }
       } else {
                 clearInterval(intervalId);
-        timerDisplay.textContent = "expired";
+        timerDisplay.textContent = "Time's up";
       }
     });
   };
@@ -196,10 +201,3 @@ const updateTimeLeftUI = async () => {
 
   const intervalId = setInterval(updateTimer, 60000);
 };
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.status === "ping") {
-    console.log("Received ping from service worker");
-    return true;
-  }
-});

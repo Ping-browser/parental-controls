@@ -2,76 +2,64 @@ import {defaultBlockRules} from "../assets/rules/defaultBlockRules.js";
 import {socialMediaBlockRules} from "../assets/rules/socialMediaBlockRules.js";
 import {gamingSiteRules} from "../assets/rules/gamesBlockRules.js";
 
-let startTime;
 let timerId;
-let timeoutDuration;
-const startSessionTimeout = async () => {
-    startTime = Date.now();
-    await chrome.storage.local.set({ startTime: startTime })
-    timerId = setTimeout(sessionTimeout, timeoutDuration);
-    // console.log("startSessionTimer", timeoutDuration,)
-}
-
 // Function to restart the timer with the remaining time when the first window is opened again
-const restartTimer = async () => {
-    const data = await chrome.storage.local.get(['timeLeft', 'loggedIn', 'sessionTimeout'])
-    const pingInterval = setInterval(() => {
-        chrome.runtime.sendMessage({
-            status: "ping",
-        });
-    }, 20000); // Ping every 10 seconds
+const startTimer = async () => {
+    try{
+        const data = await chrome.storage.local.get(['timeLeft', 'loggedIn', 'sessionTimeout'])
     if (!data.loggedIn || data.sessionTimeout) return;
-    if(data.loggedIn) {chrome.action.setIcon({
-        path: "../assets/Logo_active.png",
-    });}
-    if (data.timeLeft) timeoutDuration = data.timeLeft;
-    // console.log(timeoutDuration, "timeoutduration")
-    await updateTimeInLocalStorage();
-    startSessionTimeout()
-}
-
-// Listener for when a window is created
-chrome.windows.onCreated.addListener(async () => {
-    const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout', 'timeLeft'])
-    chrome.windows.getAll({ populate: false }, async (windows) => {
-        if (windows.length === 1) {
-            if (data.loggedIn && data.sessionTimeout != true) {
-                restartTimer();
-            }
+    if (data.loggedIn) {
+        chrome.action.setIcon({
+            path: "../assets/Logo_active.png",
+        });
+    }
+    if (data.timeLeft) {
+        const startTime = Date.now();
+        timerId = setTimeout(sessionTimeout, data.timeLeft);
+        updateTimeInLocalStorage(startTime, data.timeLeft);
         }
-    });
-});
+    }
+    catch(error){
+        console.error("error starting timer ", error)
+    }
+}
 
 chrome.tabs.onCreated.addListener(async (tab) => {
     const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
     if (data.loggedIn && data.sessionTimeout) {
         chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
-        blockHttpsSearch();
+    }
+    else if (data.loggedIn && !data.sessionTimeout) {
+        chrome.tabs.query({}, (tabs) => {
+            if (tabs.length === 1) {
+                if (data.loggedIn && data.sessionTimeout !== true) {
+                    startTimer();
+                }
+            }
+        });
     }
 });
 
 // Function to update time in local storage every minute
-const updateTimeInLocalStorage = async () => {
+const updateTimeInLocalStorage = async (startTime, timeoutDuration) => {
     const intervalId = setInterval(async () => {
-            const currentTime = Date.now();
-            await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
-            // console.log(timeoutDuration, currentTime, startTime, timeoutDuration - (currentTime - startTime), "  ", userData.loggedIn, "logedin", " sessionTimeout", userData.sessionTimeout)
-            if (timeoutDuration - (currentTime - startTime) <= 0) {
-                sessionTimeout()
-                clearInterval(intervalId);
-            }
-    }, 50000); // 50000 milliseconds = 50 sec
+        const currentTime = Date.now();
+        await chrome.storage.local.set({ timeLeft: timeoutDuration - (currentTime - startTime) })
+        if (timeoutDuration - (currentTime - startTime) < 0) {
+            await chrome.storage.local.set({ timeLeft: 1000 })
+            startTimer()
+            clearInterval(intervalId)
+        }
+    }, 30000); // 30000 milliseconds = 30 sec
 }
 
 
 const sessionTimeout = async () => {
 
+    await blockHttpsSearch();
+
     // Perform necessary actions when the session times out
-    await chrome.storage.local.set({ sessionTimeout: true }, () => {
-        if (chrome.runtime.lastError) {
-            console.error('Error setting sessionTimeout flag:', chrome.runtime.lastError);
-        }
-    });
+    await chrome.storage.local.set({ sessionTimeout: true })
     chrome.windows.create({
         url: '../content/ui/sessionTimeout.html',
         type: 'normal'
@@ -84,10 +72,8 @@ const sessionTimeout = async () => {
     )
 }
 
-let ruleAdded = false;
 // Function to block Google search URLs
 const blockHttpsSearch = async () => {
-    if(ruleAdded) return;
     const blockRule = {
         id: 999,
         priority: 1,
@@ -104,7 +90,6 @@ const blockHttpsSearch = async () => {
         removeRuleIds: [],
         addRules: [blockRule]
     });
-    ruleAdded = true;
 }
 
 // Function to allow Google search URLs
@@ -113,7 +98,8 @@ const allowHttpsSearchAsync = async () => {
         removeRuleIds: [999],
         addRules: []
     }
-    )}
+    )
+}
 
 // Hash password function
 const hashPassword = async (password) => {
@@ -163,11 +149,10 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
                 chrome.action.setIcon({
                     path: "../assets/Logo_active.png",
                 });
-                                
+
                 await injectServiceWorker(checkedToggles)
-                timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
-                await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration })
-                startSessionTimeout();
+                const timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
+                await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration, sessionTimeout: false })
                 if (chrome.runtime.lastError) {
                     console.error('Error storing data:', chrome.runtime.lastError);
                     sendResponse({ success: false });
