@@ -41,10 +41,9 @@ let intervalId;
 const updateTimeInLocalStorage = async (timeLeft) => {
     let timeLapsed = 0;
     intervalId = setInterval(async () => {
-        const currentTime = Date.now();
         timeLapsed += 20000;
         await chrome.storage.local.set({ timeLeft: timeLeft - timeLapsed })
-        if (timeLeft - (currentTime - startTime) < 0) {
+        if (timeLeft - timeLapsed < 0) {
             clearInterval(intervalId)
         }
     }, 20000); // 20000 milliseconds = 20 sec
