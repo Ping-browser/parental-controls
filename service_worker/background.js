@@ -20,7 +20,7 @@ const startTimer = async () => {
 
 chrome.tabs.onCreated.addListener(async (tab) => {
     const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
-    if(data.loggedIn){
+    if (data.loggedIn) {
         chrome.action.setIcon({
             path: "../assets/Logo_active.png",
         });
@@ -39,11 +39,10 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 // Function to update time in local storage every minute
 let intervalId;
 const updateTimeInLocalStorage = async (timeLeft) => {
-    let timeLapsed = 0;
     intervalId = setInterval(async () => {
-        timeLapsed += 20000;
-        await chrome.storage.local.set({ timeLeft: timeLeft - timeLapsed })
-        if (timeLeft - timeLapsed < 0) {
+        timeLeft -= 20000;
+        await chrome.storage.local.set({ timeLeft: timeLeft })
+        if (timeLeft < 0) {
             clearInterval(intervalId)
         }
     }, 20000); // 20000 milliseconds = 20 sec
@@ -55,16 +54,15 @@ const sessionTimeout = async () => {
 
     // Perform necessary actions when the session times out
     await chrome.storage.local.set({ sessionTimeout: true })
-    chrome.windows.create({
+    await chrome.windows.create({
         url: '../content/ui/sessionTimeout.html',
         type: 'normal'
-    },
-        chrome.windows.getAll({ populate: true }, (windows) => {
-            windows.forEach((window) => {
-                chrome.windows.remove(window.id);
-            });
-        })
-    )
+    })
+    const windows = await chrome.windows.getAll({ populate: true })
+    windows.forEach((window) => {
+        chrome.windows.remove(window.id);
+    });
+
 }
 
 // Function to block Google search URLs
@@ -92,8 +90,7 @@ const allowHttpsSearchAsync = async () => {
     await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: [999],
         addRules: []
-    }
-    )
+    })
 }
 
 // Hash password function
@@ -108,7 +105,6 @@ const hashPassword = async (password) => {
     return hashHex;
 }
 
-// Function to start kids mode
 const kidsModeSignUp = async (cpassword, password, sendResponse) => {
 
     if (!cpassword || !password)
@@ -133,6 +129,9 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
 
         const hash = await hashPassword(password);
 
+        if (!password)
+            return sendResponse({ status: false, error: "Please enter a password" });
+
         if (storedHash !== hash)
             return sendResponse({ status: false, error: "Wrong password" });
 
@@ -143,15 +142,12 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
 
             sendResponse({ status: true });
 
-            chrome.windows.getAll({ populate: true }, (windows) => {
-                windows.forEach((window) => {
-                    chrome.windows.remove(window.id);
-                });
+            const windows = await chrome.windows.getAll({ populate: true })
+            windows.forEach((window) => {
+                chrome.windows.remove(window.id);
             });
 
-            chrome.windows.create({
-                type: 'normal'
-            });
+            await chrome.windows.create({ type: 'normal' });
         } catch (error) {
             sendResponse({ status: false, error: "Error logging in, try closing all the windows" });
         }
@@ -159,7 +155,7 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
         sendResponse({ status: false, error: "An error occurred while logging in" });
     }
 }
-// Function to handle user logout
+
 const logoutUser = async (password, sendResponse) => {
     try {
         const data = await chrome.storage.local.get(['loggedIn', 'password'])
@@ -183,15 +179,12 @@ const logoutUser = async (password, sendResponse) => {
 
             await allowHttpsSearchAsync();
 
-            chrome.windows.getAll({ populate: true }, (windows) => {
-                windows.forEach((window) => {
-                    chrome.windows.remove(window.id);
-                });
+            const windows = await chrome.windows.getAll({ populate: true })
+            windows.forEach((window) => {
+                chrome.windows.remove(window.id);
             });
 
-            chrome.windows.create({
-                type: 'normal'
-            });
+            await chrome.windows.create({ type: 'normal' });
         } catch (error) {
             sendResponse({ status: false, error: "Error logging out, try closing all the windows" })
         }

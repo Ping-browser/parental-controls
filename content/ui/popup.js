@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 //register
-const register = () => {
+const register = async () => {
   const cpasswordInput = document.getElementById("cpassword");
   const passwordInput = document.getElementById("password");
   const successStatusDiv = document.getElementById("successStatus");
@@ -43,20 +43,16 @@ const register = () => {
   successStatusDiv.textContent = "";
   errorStatusDiv.textContent = "";
 
-  chrome.runtime.sendMessage(
-    { action: "register", cpassword: pass1, password: pass2 },
-    (response) => {
-      if (response && response.status === true) {
-        successStatusDiv.textContent = "Password set successfully!";
-        updatePopupContent();
-        loginPassword.value = "";
-      } else {
-        errorStatusDiv.textContent = response.error;
-        cpasswordInput.value = "";
-        passwordInput.value = "";
-      }
-    }
-  );
+  const response = await chrome.runtime.sendMessage({ action: "register", cpassword: pass1, password: pass2 })
+  if (response && response.status === true) {
+    successStatusDiv.textContent = "Password set successfully!";
+    updatePopupContent();
+    loginPassword.value = "";
+  } else {
+    errorStatusDiv.textContent = response.error;
+    cpasswordInput.value = "";
+    passwordInput.value = "";
+  }
 };
 
 //login
@@ -87,23 +83,19 @@ const login = async () => {
 
   await chrome.storage.local.set({ timeSelected: sessionTime, checkedToggles: checkedToggles })
   // Send login request to background script
-  chrome.runtime.sendMessage(
-    { action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime },
-    (response) => {
-      if (response && response.status === true) {
-        successStatusDiv.textContent = "Logged in successfully!";
-        updatePopupContent();
+  const response = await chrome.runtime.sendMessage({ action: "login", password: pass, checkedToggles: checkedToggles, sessionTime: sessionTime })
+  if (response && response.status === true) {
+    successStatusDiv.textContent = "Logged in successfully!";
+    updatePopupContent();
 
-      } else {
-        errorStatusDiv.textContent = response.error;
-        passwordInput.value = "";
-      }
-    }
-  );
+  } else {
+    errorStatusDiv.textContent = response.error;
+    passwordInput.value = "";
+  }
 };
 
 //logout
-const logout = () => {
+const logout = async () => {
   const logoutPassword = document.getElementById("logoutPassword");
   const successStatusDiv = document.getElementById("successStatus");
   const errorStatusDiv = document.getElementById("errorStatus");
@@ -113,18 +105,14 @@ const logout = () => {
   successStatusDiv.textContent = "";
   errorStatusDiv.textContent = "";
 
-  chrome.runtime.sendMessage(
-    { action: "logout", password: pass2 },
-    (response) => {
-      if (response && response.status === true) {
-        successStatusDiv.textContent = "Logged out successfully!";
-        updatePopupContent();
-      } else {
-        errorStatusDiv.textContent = response.error;
-        passwordInput.value = "";
-      }
-    }
-  );
+  const response = await chrome.runtime.sendMessage({ action: "logout", password: pass2 })
+  if (response && response.status === true) {
+    successStatusDiv.textContent = "Logged out successfully!";
+    updatePopupContent();
+  } else {
+    errorStatusDiv.textContent = response.error;
+    passwordInput.value = "";
+  }
 };
 
 // Function to update popup content based on login status
@@ -138,25 +126,24 @@ const updatePopupContent = async () => {
   successStatusDiv.textContent = "";
   errorStatusDiv.textContent = "";
 
-  await chrome.storage.local.get(["loggedIn"], (data) => {
+  const data = await chrome.storage.local.get(["loggedIn"])
 
-    if (data.loggedIn) {
-      // User is logged in
-      signUpContainer.style.display = "none";
-      signInContainer.style.display = "none";
-      kidsContent.style.display = "block";
-      updateTimeLeftUI()
-    } else if (data.loggedIn === false) {
-      // User is not logged in
-      signUpContainer.style.display = "none";
-      signInContainer.style.display = "block";
-      kidsContent.style.display = "none";
-    } else {
-      signUpContainer.style.display = "block";
-      signInContainer.style.display = "none";
-      kidsContent.style.display = "none";
-    }
-  });
+  if (data.loggedIn) {
+    // User is logged in
+    signUpContainer.style.display = "none";
+    signInContainer.style.display = "none";
+    kidsContent.style.display = "block";
+    updateTimeLeftUI()
+  } else if (data.loggedIn === false) {
+    // User is not logged in
+    signUpContainer.style.display = "none";
+    signInContainer.style.display = "block";
+    kidsContent.style.display = "none";
+  } else {
+    signUpContainer.style.display = "block";
+    signInContainer.style.display = "none";
+    kidsContent.style.display = "none";
+  }
 };
 
 const handleResetPassword = () => {
@@ -199,25 +186,22 @@ const updatePopupDetails = async () => {
 const updateTimeLeftUI = async () => {
   const timerDisplay = document.getElementById("timerDisplay");
 
-  // Function to update the timer display
   const updateTimer = async () => {
-    await chrome.storage.local.get("timeLeft", (data) => {
-      let timeLeft = data.timeLeft;
-      if (timeLeft !== undefined) {
-        let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        timerDisplay.textContent = "Time left : " + hours + "h " + minutes + "m ";
-        if (timeLeft <= 0) {
-          clearInterval(intervalId);
-          timerDisplay.textContent = "Time's up";
-        }
-      } else {
+    const data = await chrome.storage.local.get("timeLeft")
+    let timeLeft = data.timeLeft;
+    if (timeLeft !== undefined) {
+      let hours = Math.floor(timeLeft / (1000 * 60 * 60));
+      let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      timerDisplay.textContent = "Time left : " + hours + "h " + minutes + "m ";
+      if (timeLeft <= 0) {
         clearInterval(intervalId);
         timerDisplay.textContent = "Time's up";
       }
-    });
+    } else {
+      clearInterval(intervalId);
+      timerDisplay.textContent = "Time's up";
+    }
   };
-
   await updateTimer();
 
   const intervalId = setInterval(updateTimer, 30000);
