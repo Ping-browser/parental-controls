@@ -2,6 +2,8 @@ import { defaultBlockRules } from "../assets/rules/defaultBlockRules.js";
 import { socialMediaBlockRules } from "../assets/rules/socialMediaBlockRules.js";
 import { gamingSiteRules } from "../assets/rules/gamesBlockRules.js";
 
+const LOCAL_STORAGE_UPDATE_INTERVAL = 2e4;
+
 let timerId;
 // Function to restart the timer with the remaining time when the first window is opened again
 const startTimer = async () => {
@@ -12,8 +14,7 @@ const startTimer = async () => {
             timerId = setTimeout(sessionTimeout, data.timeLeft);
             updateTimeInLocalStorage(data.timeLeft);
         }
-    }
-    catch (error) {
+    } catch (error) {
         console.error("error starting timer ", error)
     }
 }
@@ -21,9 +22,7 @@ const startTimer = async () => {
 chrome.tabs.onCreated.addListener(async (tab) => {
     const data = await chrome.storage.local.get(['loggedIn', 'sessionTimeout'])
     if (data.loggedIn) {
-        chrome.action.setIcon({
-            path: "../assets/Logo_active.png",
-        });
+        chrome.action.setIcon({ path: "../assets/Logo_active.png" });
     }
     if (data.loggedIn && data.sessionTimeout) {
         chrome.tabs.update(tab.id, { url: '../content/ui/sessionTimeout.html' });
@@ -40,28 +39,19 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 let intervalId;
 const updateTimeInLocalStorage = async (timeLeft) => {
     intervalId = setInterval(async () => {
-        timeLeft -= 20000;
+        timeLeft -= LOCAL_STORAGE_UPDATE_INTERVAL;
         await chrome.storage.local.set({ timeLeft: timeLeft })
         if (timeLeft < 0) {
             clearInterval(intervalId)
         }
-    }, 20000); // 20000 milliseconds = 20 sec
+    }, LOCAL_STORAGE_UPDATE_INTERVAL); // 20000 milliseconds = 20 sec
 }
 
 const sessionTimeout = async () => {
-
     await blockHttpsSearch();
-
     await chrome.storage.local.set({ sessionTimeout: true });
-
-    const windows = await chrome.windows.getAll({ populate: true })
-    windows.forEach((window) => {
-        chrome.windows.remove(window.id);
-    });
-    await chrome.windows.create({
-        url: '../content/ui/sessionTimeout.html',
-        type: 'normal'
-    })
+    const url = '../content/ui/sessionTimeout.html';
+    await handleWindows(url);
 }
 
 // Function to block Google search URLs
@@ -125,7 +115,6 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
     try {
         const data = await chrome.storage.local.get(['password']);
         const storedHash = data.password;
-
         const hash = await hashPassword(password);
 
         if (!password)
@@ -138,15 +127,8 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
             await injectServiceWorker(checkedToggles)
             const timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
             await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration, sessionTimeout: false })
-
             sendResponse({ status: true });
-
-            const windows = await chrome.windows.getAll({ populate: true })
-            windows.forEach((window) => {
-                chrome.windows.remove(window.id);
-            });
-
-            await chrome.windows.create({ type: 'normal' });
+            await handleWindows();
         } catch (error) {
             sendResponse({ status: false, error: "Error logging in, try closing all the windows" });
         }
@@ -159,31 +141,20 @@ const logoutUser = async (password, sendResponse) => {
     try {
         const data = await chrome.storage.local.get(['loggedIn', 'password'])
         const storedPassword = data.password;
-
         const hash = await hashPassword(password);
 
         if (storedPassword !== hash)
             return sendResponse({ status: false, error: "Wrong password" });
 
         try {
-            chrome.action.setIcon({
-                path: "../assets/Logo_inactive.png",
-            });
+            chrome.action.setIcon({ path: "../assets/Logo_inactive.png" });
             removeServiceWorker();
             clearTimeout(timerId);
             clearInterval(intervalId)
             await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false })
-
             sendResponse({ status: true });
-
             await allowHttpsSearchAsync();
-
-            const windows = await chrome.windows.getAll({ populate: true })
-            windows.forEach((window) => {
-                chrome.windows.remove(window.id);
-            });
-
-            await chrome.windows.create({ type: 'normal' });
+            await handleWindows();
         } catch (error) {
             sendResponse({ status: false, error: "Error logging out, try closing all the windows" })
         }
@@ -192,13 +163,29 @@ const logoutUser = async (password, sendResponse) => {
     }
 }
 
+const handleWindows = async (url) => {
+    const windows = await chrome.windows.getAll({ populate: true })
+    windows.forEach((window) => {
+        chrome.windows.remove(window.id);
+    });
+    if (!url) await chrome.windows.create({ type: 'normal' });
+    else chrome.windows.create({ url: url, type: 'normal' });
+}
+
+const updateBlockingRules = async (rulesToInject) => {
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRulesIds = oldRules.map(rule => rule.id);
+
+    await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: oldRulesIds,
+        addRules: rulesToInject
+    });
+}
+
 export const injectServiceWorker = async (checkedToggles) => {
 
     if (!checkedToggles) return;
     const rulesToInject = [];
-    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
-    const oldRulesIds = oldRules.map(rule => rule.id);
-
     rulesToInject.push(...defaultBlockRules);
 
     checkedToggles.forEach((toggle) => {
@@ -215,10 +202,7 @@ export const injectServiceWorker = async (checkedToggles) => {
         }
     });
 
-    await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: oldRulesIds,
-        addRules: rulesToInject
-    });
+    updateBlockingRules(rulesToInject);
 }
 
 //remove all the rules on the session end
