@@ -52,17 +52,16 @@ const sessionTimeout = async () => {
 
     await blockHttpsSearch();
 
-    // Perform necessary actions when the session times out
-    await chrome.storage.local.set({ sessionTimeout: true })
-    await chrome.windows.create({
-        url: '../content/ui/sessionTimeout.html',
-        type: 'normal'
-    })
+    await chrome.storage.local.set({ sessionTimeout: true });
+
     const windows = await chrome.windows.getAll({ populate: true })
     windows.forEach((window) => {
         chrome.windows.remove(window.id);
     });
-
+    await chrome.windows.create({
+        url: '../content/ui/sessionTimeout.html',
+        type: 'normal'
+    })
 }
 
 // Function to block Google search URLs

@@ -186,6 +186,7 @@ const updatePopupDetails = async () => {
 const updateTimeLeftUI = async () => {
   const timerDisplay = document.getElementById("timerDisplay");
 
+  let intervalId;
   const updateTimer = async () => {
     const data = await chrome.storage.local.get("timeLeft")
     let timeLeft = data.timeLeft;
@@ -204,5 +205,5 @@ const updateTimeLeftUI = async () => {
   };
   await updateTimer();
 
-  const intervalId = setInterval(updateTimer, 30000);
+  intervalId = setInterval(updateTimer, 30000);
 };
