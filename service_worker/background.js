@@ -51,7 +51,7 @@ const sessionTimeout = async () => {
     await blockHttpsSearch();
     await chrome.storage.local.set({ sessionTimeout: true });
     const url = '../content/ui/sessionTimeout.html';
-    await handleWindows(url);
+    await handleBrowserWindows(url);
 }
 
 // Function to block Google search URLs
@@ -128,7 +128,7 @@ const kidsModeSignIn = async (password, checkedToggles, sessionTime, sendRespons
             const timeoutDuration = sessionTime * 60 * 60 * 1000; //no. of hrs * 60 min
             await chrome.storage.local.set({ loggedIn: true, timeLeft: timeoutDuration, sessionTimeout: false })
             sendResponse({ status: true });
-            await handleWindows();
+            await handleBrowserWindows();
         } catch (error) {
             sendResponse({ status: false, error: "Error logging in, try closing all the windows" });
         }
@@ -154,7 +154,7 @@ const logoutUser = async (password, sendResponse) => {
             await chrome.storage.local.set({ loggedIn: false, sessionTimeout: false })
             sendResponse({ status: true });
             await allowHttpsSearchAsync();
-            await handleWindows();
+            await handleBrowserWindows();
         } catch (error) {
             sendResponse({ status: false, error: "Error logging out, try closing all the windows" })
         }
@@ -163,7 +163,7 @@ const logoutUser = async (password, sendResponse) => {
     }
 }
 
-const handleWindows = async (url) => {
+const handleBrowserWindows = async (url) => {
     const windows = await chrome.windows.getAll({ populate: true })
     windows.forEach((window) => {
         chrome.windows.remove(window.id);
